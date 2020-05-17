@@ -13,7 +13,7 @@ def index():
 @app.route("/pc", methods = ['POST', 'GET'])
 def data_load_pc():
     global dataframe
-    data_df = dataframe.filter(['age','fnlwgt','capital_gain','capital_loss','hours_per_week'], axis=1)
+    data_df = dataframe.filter(['index','age','fnlwgt','capital_gain','capital_loss','hours_per_week'], axis=1)
     return data_df
 
 def load_data():
