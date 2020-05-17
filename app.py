@@ -17,7 +17,7 @@ def data_load_pc():
     return data_df
 
 def load_data():
-    full_data = pd.read_csv("static/data/sample_adult.csv",header=0)
+    full_data = pd.read_csv("static/data/sample_adult.csv",header=0) 
     l = full_data.shape[0]
     index = list(range(1,l+1))
     full_data.insert(0, "index", index, True)
