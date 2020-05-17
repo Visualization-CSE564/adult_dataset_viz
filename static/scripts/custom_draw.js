@@ -1,6 +1,10 @@
 function init() {
     console.log("I AM CALLED")
-}
+    $.post("/pc", {},
+            function(data_infunc){
+                console.log(data_infuc)
+            });
+
 
 var margin = {top: 50, right: 50, bottom: 50, left: 50},
 width = 960 - margin.left - margin.right,
@@ -59,7 +63,7 @@ var svg = d3.select("body").append("svg")
     .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-d3.csv("data.csv", function(error, data) {
+d3.csv("/static/data/data.csv", function(error, data) {
 
     //Create the dimensions depending on attribute "type" (number|string)
     //The x-scale calculates the position by attribute dimensions[x].name
@@ -175,4 +179,5 @@ function brush() {
             }
         }) ? null : "none";
     });
+}
 }
