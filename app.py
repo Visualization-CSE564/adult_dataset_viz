@@ -14,7 +14,16 @@ def index():
 def data_load_pc():
     global dataframe
     data_df = dataframe.filter(['index','age','fnlwgt','capital_gain','capital_loss','hours_per_week'], axis=1)
-    return data_df
+    return data_df.tolist()
+
+# @app.route("/piechart", methods = ['POST'])
+# def pie_data():
+#     global dataframe
+#     data_df = dataframe.filter(['index','race','sex','Income'],axis=1)
+
+#     if request.form['list'] == None:
+        
+
 
 def load_data():
     full_data = pd.read_csv("static/data/sample_adult.csv",header=0) 
