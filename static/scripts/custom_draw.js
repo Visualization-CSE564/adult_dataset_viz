@@ -1,14 +1,56 @@
+var svg_position = {
+    row1: {height: 130, width1: 1200},
+    row2: {height: 400, width1: 750, width2: 450},
+    row3: {height: 250, width1: 450, width2: 400, width3: 350}
+}
+
 function init() {
+    d3.select(".header")
+        .attr("width", svg_position.row1.width1)
+        .attr("height", svg_position.row1.height)
+        .style("top", 0)
+        .style("left", 0);
+
+    d3.select(".parallelcoord")
+        .attr("width", svg_position.row2.width1)
+        .attr("height", svg_position.row2.height)
+        .style("top", svg_position.row1.height)
+        .style("left", 0);
+
+    d3.select(".piechart")
+        .attr("width", svg_position.row2.width2)
+        .attr("height", svg_position.row2.height)
+        .style("top", svg_position.row1.height)
+        .style("left", svg_position.row2.width1);
+
+    d3.select(".horizontalbar")
+        .attr("width", svg_position.row3.width1)
+        .attr("height", svg_position.row3.height)
+        .style("top", svg_position.row1.height + svg_position.row2.height)
+        .style("left", 0);
+
+    d3.select(".stackedbar")
+        .attr("width", svg_position.row3.width2)
+        .attr("height", svg_position.row3.height)
+        .style("top", svg_position.row1.height + svg_position.row2.height)
+        .style("left", svg_position.row3.width1);
+
+    d3.select(".insights")
+        .attr("width", svg_position.row3.width3)
+        .attr("height", svg_position.row3.height)
+        .style("top", svg_position.row1.height + svg_position.row2.height)
+        .style("left", svg_position.row3.width1 + svg_position.row3.width2);
+
     $.post("/pc", {},
         function(data_infunc){
             draw_pc(data_infunc);
         });
 }
 
-function draw_pc(data) {
+function draw_pc(dt) {
     var margin = {top: 50, right: 50, bottom: 50, left: 50},
-    width = 650 - margin.left - margin.right,
-    height = 400 - margin.top - margin.bottom;
+    width = svg_position.row2.width1 - margin.left - margin.right,
+    height = svg_position.row2.height - margin.top - margin.bottom;
 
     var dimensions = [
         {
@@ -18,21 +60,21 @@ function draw_pc(data) {
         },
         {
             name: "FnlWgt",
-            scale: d3.scale.ordinal().range([0, height]),
-            type: "number"
-        },
-        {
-            name: "Capital Gain",
             scale: d3.scale.linear().range([height, 0]),
             type: "number"
         },
         {
-            name: "Capital Loss",
-            scale: d3.scale.ordinal().range([0, height]),
+            name: "CapitalGain",
+            scale: d3.scale.linear().range([height, 0]),
             type: "number"
         },
         {
-            name: "Hrs/Wk",
+            name: "CapitalLoss",
+            scale: d3.scale.linear().range([height, 0]),
+            type: "number"
+        },
+        {
+            name: "HrsPerWk",
             scale: d3.scale.linear().range([height, 0]),
             type: "number"
         }
@@ -47,90 +89,95 @@ function draw_pc(data) {
         background,
         foreground;
 
-    var svg = d3.select("body").append("svg")
+    var svg = d3.select(".parallelcoord")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
         .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    // d3.csv("/static/data/data.csv", function(error, data) {
+    var data = []
+    for (var i = 0; i < dt['data_dict'].length; i++) {
+        data.push({'Index': dt['data_dict'][i][0], 'Age':dt['data_dict'][i][1], 'FnlWgt':dt['data_dict'][i][2], 'CapitalGain':dt['data_dict'][i][3], 'CapitalLoss':dt['data_dict'][i][4], 'HrsPerWk':dt['data_dict'][i][5]})
+    }
 
-        //Create the dimensions depending on attribute "type" (number|string)
-        //The x-scale calculates the position by attribute dimensions[x].name
-        dimensions.forEach(function(dimension) {
-            dimension.scale.domain(dimension.type === "number"
-                ? d3.extent(data, function(d) { return +d[dimension.name]; })
-                : data.map(function(d) { return d[dimension.name]; }).sort());
-        });
+    console.log(dt['data_dict'])
 
-        // Add grey background lines for context.
-        background = svg.append("g")
-                .attr("class", "background")
-            .selectAll("path")
-                .data(data)
-            .enter().append("path")
-                .attr("d", path);
 
-        // Add blue foreground lines for focus.
-        foreground = svg.append("g")
-                .attr("class", "foreground")
-            .selectAll("path")
-                .data(data)
-            .enter().append("path")
-                .attr("d", path);
+    //Create the dimensions depending on attribute "type" (number|string)
+    //The x-scale calculates the position by attribute dimensions[x].name
+    dimensions.forEach(function(dimension) {
+        dimension.scale.domain(dimension.type === "number"
+            ? d3.extent(data, function(d) { return +d[dimension.name]; })
+            : data.map(function(d) { return d[dimension.name]; }).sort());
+    });
 
-        // Add a group element for each dimension.
-        var g = svg.selectAll(".dimension")
-                    .data(dimensions)
-                .enter().append("g")
-                    .attr("class", "dimension")
-                    .attr("transform", function(d) { return "translate(" + x(d.name) + ")"; })
-                .call(d3.behavior.drag()
-                        .origin(function(d) { return {x: x(d.name)}; })
-                    .on("dragstart", function(d) {
-                        dragging[d.name] = x(d.name);
-                        background.attr("visibility", "hidden");
-                    })
-                    .on("drag", function(d) {
-                        dragging[d.name] = Math.min(width, Math.max(0, d3.event.x));
-                        foreground.attr("d", path);
-                        dimensions.sort(function(a, b) { return position(a) - position(b); });
-                        x.domain(dimensions.map(function(d) { return d.name; }));
-                        g.attr("transform", function(d) { return "translate(" + position(d) + ")"; })
-                    })
-                    .on("dragend", function(d) {
-                        delete dragging[d.name];
-                        transition(d3.select(this)).attr("transform", "translate(" + x(d.name) + ")");
-                        transition(foreground).attr("d", path);
-                        background
-                            .attr("d", path)
-                            .transition()
-                                .delay(500)
-                                .duration(0)
-                                .attr("visibility", null);
-                    })
-                );
+    // Add grey background lines for context.
+    background = svg.append("g")
+            .attr("class", "background")
+        .selectAll("path")
+            .data(data)
+        .enter().append("path")
+            .attr("d", path);
 
-        // Add an axis and title.
-        g.append("g")
-                .attr("class", "axis")
-            .each(function(d) { d3.select(this).call(axis.scale(d.scale)); })
-                .append("text")
-                    .style("text-anchor", "middle")
-                    .attr("class", "axis-label")
-                    .attr("y", -19)
-                    .text(function(d) { return d.name; });
+    // Add blue foreground lines for focus.
+    foreground = svg.append("g")
+            .attr("class", "foreground")
+        .selectAll("path")
+            .data(data)
+        .enter().append("path")
+            .attr("d", path);
 
-        // Add and store a brush for each axis.
-        g.append("g")
-                .attr("class", "brush")
-            .each(function(d) {
-                d3.select(this).call(d.scale.brush = d3.svg.brush().y(d.scale).on("brushstart", brushstart).on("brush", brush));
-            })
-            .selectAll("rect")
-                .attr("x", -8)
-                .attr("width", 16);
-    // });
+    // Add a group element for each dimension.
+    var g = svg.selectAll(".dimension")
+                .data(dimensions)
+            .enter().append("g")
+                .attr("class", "dimension")
+                .attr("transform", function(d) { return "translate(" + x(d.name) + ")"; })
+            .call(d3.behavior.drag()
+                    .origin(function(d) { return {x: x(d.name)}; })
+                .on("dragstart", function(d) {
+                    dragging[d.name] = x(d.name);
+                    background.attr("visibility", "hidden");
+                })
+                .on("drag", function(d) {
+                    dragging[d.name] = Math.min(width, Math.max(0, d3.event.x));
+                    foreground.attr("d", path);
+                    dimensions.sort(function(a, b) { return position(a) - position(b); });
+                    x.domain(dimensions.map(function(d) { return d.name; }));
+                    g.attr("transform", function(d) { return "translate(" + position(d) + ")"; })
+                })
+                .on("dragend", function(d) {
+                    delete dragging[d.name];
+                    transition(d3.select(this)).attr("transform", "translate(" + x(d.name) + ")");
+                    transition(foreground).attr("d", path);
+                    background
+                        .attr("d", path)
+                        .transition()
+                            .delay(500)
+                            .duration(0)
+                            .attr("visibility", null);
+                })
+            );
+
+    // Add an axis and title.
+    g.append("g")
+            .attr("class", "axis")
+        .each(function(d) { d3.select(this).call(axis.scale(d.scale)); })
+            .append("text")
+                .style("text-anchor", "middle")
+                .attr("class", "axis-label")
+                .attr("y", -19)
+                .text(function(d) { return d.name; });
+
+    // Add and store a brush for each axis.
+    g.append("g")
+            .attr("class", "brush")
+        .each(function(d) {
+            d3.select(this).call(d.scale.brush = d3.svg.brush().y(d.scale).on("brushstart", brushstart).on("brush", brush));
+        })
+        .selectAll("rect")
+            .attr("x", -8)
+            .attr("width", 16);
 
     function position(d) {
         var v = dragging[d.name];
