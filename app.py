@@ -21,12 +21,52 @@ def pie_data():
     global dataframe
     data_df = dataframe.filter(['race','income','index'],axis=1)
     print(dataframe.columns)
-    # if request.form['list'] == None:
-    filter_df = data_df.groupby(by = ['race','income'])
-    filter_df = filter_df.count()
-    filter_df.reset_index(inplace=True) 
-    return {"data_dict" : filter_df.values.tolist()}
+    if 'list' not in request.form:
+        filter_df = data_df.groupby(by = ['race','income'])
+        filter_df = filter_df.count()
+        filter_df.reset_index(inplace=True) 
+        return {"data_dict" : filter_df.values.tolist()}
+    else:
+        filter_df = data_df[data_df['index'].isin(request.form['list'])]
+        new_filter_df = filter_df.groupby(by = ['race','income'])
+        new_filter_df = new_filter_df.count()
+        new_filter_df.reset_index(inplace=True) 
+        return {"data_dict" : new_filter_df.values.tolist()}
 
+
+@app.route("/hori_bc", methods = ['POST'])
+def horizontal_bar_data():
+    global dataframe
+    data_df = dataframe.filter(['occupation','income','index'],axis=1)
+    print(dataframe.columns)
+    if 'list' not in request.form:
+        filter_df = data_df.groupby(by = ['occupation','income'])
+        filter_df = filter_df.count()
+        filter_df.reset_index(inplace=True) 
+        return {"data_dict" : filter_df.values.tolist()}
+    else:
+        filter_df = data_df[data_df['index'].isin(request.form['list'])]
+        new_filter_df = filter_df.groupby(by = ['occupation','income'])
+        new_filter_df = new_filter_df.count()
+        new_filter_df.reset_index(inplace=True) 
+        return {"data_dict" : new_filter_df.values.tolist()}
+
+@app.route("/bc", methods = ['POST'])
+def bar_data():
+    global dataframe
+    data_df = dataframe.filter(['marital_status','income','index'],axis=1)
+    print(dataframe.columns)
+    if 'list' not in request.form:
+        filter_df = data_df.groupby(by = ['marital_status','income'])
+        filter_df = filter_df.count()
+        filter_df.reset_index(inplace=True) 
+        return {"data_dict" : filter_df.values.tolist()}
+    else:
+        filter_df = data_df[data_df['index'].isin(request.form['list'])]
+        new_filter_df = filter_df.groupby(by = ['marital_status','income'])
+        new_filter_df = new_filter_df.count()
+        new_filter_df.reset_index(inplace=True)
+        return {"data_dict" : new_filter_df.values.tolist()}
 
 def load_data():
     full_data = pd.read_csv("static/data/sample_adult.csv",header=0) 
