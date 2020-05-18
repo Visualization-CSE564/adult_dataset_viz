@@ -40,10 +40,8 @@ function init() {
         .attr("height", svg_position.row3.height)
         .style("top", svg_position.row1.height + svg_position.row2.height)
         .style("left", svg_position.row3.width1 + svg_position.row3.width2);
-    $.post("/hori_bc", {},
-        function(data_infunc){
-            console.log("fda");
-            draw_hori_bc(data_infunc);
+    $.post("/barch", {}, function(data_infunc){
+            draw_bc(data_infunc);
         });
 
 }
@@ -106,70 +104,68 @@ function draw_hori_bc(dt){
 }
 
 function draw_bc(dt){
-console.log("fadfa")
-}
-//     var margin = {top: 25, right: 25, bottom: 25, left: 25},
-//     width = svg_position.row3.width1 - margin.left - margin.right,
-//     height = svg_position.row3.height - margin.top - margin.bottom;
+    var margin = {top: 25, right: 25, bottom: 25, left: 25},
+    width = svg_position.row3.width1 - margin.left - margin.right,
+    height = svg_position.row3.height - margin.top - margin.bottom;
 
-//     var svg = d3.select(".stackedbar")
-//         .attr("width", width + margin.left + margin.right)
-//         .attr("height", height + margin.top + margin.bottom)
-//         .append("g")
-//         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    var svg = d3.select(".stackedbar")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-//     var svg2 = svg.append("g");
-//     var svg1 = svg.append("g");
+    var svg2 = svg.append("g");
+    var svg1 = svg.append("g");
 
-//     var data_hbc = dt['data_dict'];
-//     var l = data_hbc.length;
-//     console.log(data_hbc);
-//     var barwidth = width/l;
+    var data_hbc = dt['data_dict'];
+    var l = data_hbc.length;
+    console.log(data_hbc);
+    var barwidth = width/l;
 
-//     var x = d3.scale.ordinal().rangePoints([0,width]);
-//     var y = d3.scale.linear().domain([0, d3.max(data_hbc, function(d){return d[1]+d[2]})]).range([height,0]);
+    var x = d3.scale.ordinal().rangePoints([0,width]);
+    var y = d3.scale.linear().domain([0, d3.max(data_hbc, function(d){return d[1]+d[2]})]).range([height,0]);
 
-//     var xAxis = d3.svg.axis()
-//             .scale(x)
-//             .orient("bottom");
-//     var yAxis = d3.svg.axis()
-//             .scale(y)
-//             .orient("left");
+    var xAxis = d3.svg.axis()
+            .scale(x)
+            .orient("bottom");
+    var yAxis = d3.svg.axis()
+            .scale(y)
+            .orient("left");
 
-//     var bar1 = svg1.selectAll("g")
-//             .data(data_hbc)
-//             .enter().append("g")
-//             .attr("transform", function(d, i) { return "translate(" + ( (i * barwidth) + margin.left)+ ","+ (height - margin.bottom) +")" ;})
-//     var bar2 = svg2.selectAll("g")
-//             .data(data_hbc)
-//             .enter().append("g")
-//             .attr("transform", function(d, i) { return "translate(" + ( (i * barwidth) + margin.left)+ ","+ (height + y(d[1]) - margin.bottom) +")" ;})
+    var bar1 = svg1.selectAll("g")
+            .data(data_hbc)
+            .enter().append("g")
+            .attr("transform", function(d, i) { return "translate(" + ( (i * barwidth) + margin.left)+ ","+ (height - y(d[1]) + margin.bottom/5) +")" ;})
+    var bar2 = svg2.selectAll("g")
+            .data(data_hbc)
+            .enter().append("g")
+            .attr("transform", function(d, i) { return "translate(" + ( (i * barwidth) + margin.left)+ ","+ ((y(d[1]) + y(d[2])) + margin.bottom) +")" ;})
     
-//     bar2.append("rect")
-//           .attr("width", barwidth)
-//           .attr("height", function(d){return (y(d[2]));})
-//           .attr("fill","#3A8399");
-//     bar1.append("rect")
-//           .attr("width", barwidth)
-//           .attr("height", function(d){return (y(d[1]));})
-//           .attr("fill","orange");
+    bar2.append("rect")
+          .attr("width", barwidth)
+          .attr("height", function(d){return (y(d[2]));})
+          .attr("fill","#3A8399");
+    bar1.append("rect")
+          .attr("width", barwidth)
+          .attr("height", function(d){return (y(d[1]));})
+          .attr("fill","orange");
 
-//     // bar1.append("text")
-//     //       .attr("x", (barwidth) / 2)
-//     //       .attr("font-size",barwidth+"px")
-//     //       .attr("transform", function(d,i){return "translate("+ (0) +","+(barwidth/2 + 3)+")" ;})
-//     //       .attr("fill","#B63617")
-//     //       .text(function(d) { return d[0];});
+    // bar1.append("text")
+    //       .attr("x", (barwidth) / 2)
+    //       .attr("font-size",barwidth+"px")
+    //       .attr("transform", function(d,i){return "translate("+ (0) +","+(barwidth/2 + 3)+")" ;})
+    //       .attr("fill","#B63617")
+    //       .text(function(d) { return d[0];});
 
-//     svg.append("g")
-//             .attr("class", "x axis")
-//             .attr("transform", "translate("+(margin.left)+"," + (margin.top/5)  + ")")
-//             .call(xAxis);
-//     svg.append("g")
-//             .attr("class", "y axis")
-//             .attr("transform", "translate("+(margin.left)+"," + (height - margin.bottom)  + ")")
-//             .call(yAxis);
-// }
+    svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate("+(margin.left)+"," + (height + margin.top/5)  + ")")
+            .call(xAxis);
+    svg.append("g")
+            .attr("class", "y axis")
+            .attr("transform", "translate("+(margin.left)+"," + (margin.top/5)  + ")")
+            .call(yAxis);
+}
 
 function draw_pc(dt) {
     var margin = {top: 50, right: 50, bottom: 50, left: 50},

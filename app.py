@@ -13,7 +13,7 @@ def index():
 @app.route("/pc", methods = ['POST', 'GET'])
 def data_load_pc():
     global dataframe
-    data_df = dataframe.filter(['index','age','fnlwgt','capital_gain','capital_loss','hours_per_week'], axis=1)
+    data_df = dataframe.filter(['index','age','fnlwgt','capital_gain','capital_loss','hours_per_week','income'], axis=1)
     return {"data_dict" : data_df.values.tolist()}
 
 @app.route("/piechart", methods = ['POST'])
@@ -51,6 +51,7 @@ def horizontal_bar_data():
         pivot_df = filter_df.pivot(index= 'occupation', columns = 'income' , values = 'index')
         pivot_df.loc[pivot_df['>50K'].isnull() , '>50K'] = 0
         pivot_df.reset_index(inplace=True)
+        print({"data_dict" : pivot_df.values.tolist()})
         return {"data_dict" : pivot_df.values.tolist()}
     else:
         filter_df = data_df[data_df['index'].isin(request.form['list'])]
@@ -72,8 +73,10 @@ def bar_data():
         filter_df.reset_index(inplace=True) 
         pivot_df = filter_df.pivot(index= 'marital_status', columns = 'income' , values = 'index')
         pivot_df.loc[pivot_df['>50K'].isnull() , '>50K'] = 0
+        pivot_df.loc[pivot_df['<=50K'].isnull() , '<=50K'] = 0
         pivot_df.reset_index(inplace=True)
-        return {"data_dict" : pivot_df.values.tolist()}
+        return_val = pivot_df.values.tolist()
+        return {"data_dict" : return_val}
     else:
         filter_df = data_df[data_df['index'].isin(request.form['list'])]
         new_filter_df = filter_df.groupby(by = ['marital_status','income'])
