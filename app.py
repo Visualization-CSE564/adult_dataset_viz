@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 @app.route("/", methods = ['POST', 'GET'])
 def index():
-    return render_template("index.html", data = {'text': 'Visualization Project'})
+    return render_template("test2.html", data = {'text': 'Visualization Project'})
 
 @app.route("/pc", methods = ['POST', 'GET'])
 def data_load_pc():
@@ -40,33 +40,43 @@ def horizontal_bar_data():
     data_df = dataframe.filter(['occupation','income','index'],axis=1)
     print(dataframe.columns)
     if 'list' not in request.form:
-        filter_df = data_df.groupby(by = ['occupation','income'])
-        filter_df = filter_df.count()
-        filter_df.reset_index(inplace=True) 
-        return {"data_dict" : filter_df.values.tolist()}
+        filter_df = data_df.groupby(by = ['occupation','income']).count()
+        filter_df.reset_index(inplace=True)
+        pivot_df = filter_df.pivot(index= 'occupation', columns = 'income' , values = 'index')
+        pivot_df.loc[pivot_df['>50K'].isnull() , '>50K'] = 0
+        pivot_df.reset_index(inplace=True)
+        return {"data_dict" : pivot_df.values.tolist()}
     else:
         filter_df = data_df[data_df['index'].isin(request.form['list'])]
         new_filter_df = filter_df.groupby(by = ['occupation','income'])
         new_filter_df = new_filter_df.count()
-        new_filter_df.reset_index(inplace=True) 
-        return {"data_dict" : new_filter_df.values.tolist()}
+        new_filter_df.reset_index(inplace=True)
+        pivot_df = new_filter_df.pivot(index= 'occupation', columns = 'income' , values = 'index')
+        pivot_df.loc[pivot_df['>50K'].isnull() , '>50K'] = 0
+        pivot_df.reset_index(inplace=True)
+        return {"data_dict" : pivot_df.values.tolist()}
 
-@app.route("/bc", methods = ['POST'])
+@app.route("/barch", methods = ['POST'])
 def bar_data():
     global dataframe
     data_df = dataframe.filter(['marital_status','income','index'],axis=1)
-    print(dataframe.columns)
     if 'list' not in request.form:
         filter_df = data_df.groupby(by = ['marital_status','income'])
         filter_df = filter_df.count()
         filter_df.reset_index(inplace=True) 
-        return {"data_dict" : filter_df.values.tolist()}
+        pivot_df = filter_df.pivot(index= 'marital_status', columns = 'income' , values = 'index')
+        pivot_df.loc[pivot_df['>50K'].isnull() , '>50K'] = 0
+        pivot_df.reset_index(inplace=True)
+        return {"data_dict" : pivot_df.values.tolist()}
     else:
         filter_df = data_df[data_df['index'].isin(request.form['list'])]
         new_filter_df = filter_df.groupby(by = ['marital_status','income'])
         new_filter_df = new_filter_df.count()
         new_filter_df.reset_index(inplace=True)
-        return {"data_dict" : new_filter_df.values.tolist()}
+        pivot_df = new_filter_df.pivot(index= 'marital_status', columns = 'income' , values = 'index')
+        pivot_df.loc[pivot_df['>50K'].isnull() , '>50K'] = 0
+        pivot_df.reset_index(inplace=True)
+        return {"data_dict" : pivot_df.values.tolist()}
 
 def load_data():
     full_data = pd.read_csv("static/data/sample_adult.csv",header=0) 
