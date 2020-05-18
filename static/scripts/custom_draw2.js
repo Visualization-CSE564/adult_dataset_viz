@@ -40,10 +40,10 @@ function init() {
         .attr("height", svg_position.row3.height)
         .style("top", svg_position.row1.height + svg_position.row2.height)
         .style("left", svg_position.row3.width1 + svg_position.row3.width2);
-    $.post("/barch", {},
+    $.post("/hori_bc", {},
         function(data_infunc){
             console.log("fda");
-            // draw_bc(data_infunc);
+            draw_hori_bc(data_infunc);
         });
 
 }
@@ -68,7 +68,7 @@ function draw_hori_bc(dt){
     var barwidth = height/l;
 
     var x = d3.scale.ordinal().rangePoints([height,0]);
-    var y = d3.scale.linear().domain([0, d3.max(data_hbc, function(d){return d[1]+d[2]})]).range([0, width - margin.right]);
+    var y = d3.scale.linear().domain([0, d3.max(data_hbc, function(d){return d[1]+d[2]})]).range([0, width]);
 
     var xAxis = d3.svg.axis()
             .scale(x)
@@ -77,11 +77,11 @@ function draw_hori_bc(dt){
     var bar1 = svg1.selectAll("g")
             .data(data_hbc)
             .enter().append("g")
-            .attr("transform", function(d, i) { return "translate(" + (margin.left)+ ","+ (i * barwidth + margin.top/5) +")" ;})
+            .attr("transform", function(d, i) { return "translate(" + (margin.left/2)+ ","+ (i * barwidth + margin.top/5) +")" ;})
     var bar2 = svg2.selectAll("g")
             .data(data_hbc)
             .enter().append("g")
-            .attr("transform", function(d, i) { return "translate(" + (margin.left + y(d[1])) + "," + (i * barwidth + margin.top/5) +")" ;})
+            .attr("transform", function(d, i) { return "translate(" + (margin.left/2 + y(d[1])) + "," + (i * barwidth + margin.top/5) +")" ;})
     
     bar2.append("rect")
           .attr("height", barwidth)
@@ -101,7 +101,7 @@ function draw_hori_bc(dt){
 
     svg.append("g")
             .attr("class", "x axis")
-            .attr("transform", "translate("+(margin.left)+"," + (margin.top/5)  + ")")
+            .attr("transform", "translate("+(margin.left/2)+"," + (margin.top/5)  + ")")
             .call(xAxis);
 }
 
