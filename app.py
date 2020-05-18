@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 @app.route("/", methods = ['POST', 'GET'])
 def index():
-    return render_template("test2.html", data = {'text': 'Visualization Project'})
+    return render_template("index.html", data = {'text': 'Visualization Project'})
 
 @app.route("/pc", methods = ['POST', 'GET'])
 def data_load_pc():
