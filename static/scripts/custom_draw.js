@@ -1,7 +1,12 @@
 var svg_position = {
     row1: {height: 120, width1: 1200},
     row2: {height: 400, width1: 750, width2: 450},
-    row3: {height: 250, width1: 450, width2: 400, width3: 350}
+    row3: {height: 250, width1: 450, width2: 300, width3: 450}
+}
+
+var global_colors = {
+    "<=50K": "orange",
+    ">50K": "#3A8399"
 }
 
 var transition_duration = 200;
@@ -46,6 +51,70 @@ function init() {
     $.post("/pc", {}, draw_pc);
     $.post("/piechart", {}, draw_piechart);
     $.post("/hori_bc", {}, draw_hori_bc);
+    $.post("/barch", {}, draw_bc);
+}
+
+function draw_bc(dt){
+    var margin = {top: 25, right: 25, bottom: 25, left: 25, text: 100},
+    width = svg_position.row3.width2 - margin.left - margin.right,
+    height = svg_position.row3.height - margin.top - margin.bottom - margin.text;
+
+    var svg = d3.select(".stackedbar")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom + margin.text)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    var svg2 = svg.append("g");
+    var svg1 = svg.append("g");
+
+    var data_hbc = dt['data_dict'];
+    var l = data_hbc.length;
+    var barwidth = (width-margin.right)/l;
+
+    var x = d3.scale.ordinal().rangePoints([0,width - margin.right]);
+    var y = d3.scale.linear().domain([0, d3.max(data_hbc, function(d){return d[1]+d[2]})]).range([height,0]);
+
+    var xAxis = d3.svg.axis()
+            .scale(x)
+            .orient("bottom");
+    var yAxis = d3.svg.axis()
+            .scale(y)
+            .orient("left");
+
+    var bar1 = svg1.selectAll("g")
+            .data(data_hbc)
+            .enter().append("g")
+            .attr("transform", function(d, i) {console.log(i*barwidth, d, y(d[1])); return "translate(" + ( (i * barwidth) + margin.left)+ ","+ (margin.top/5 + y(d[1])) +")" ;})
+    var bar2 = svg2.selectAll("g")
+            .data(data_hbc)
+            .enter().append("g")
+            .attr("transform", function(d, i) { console.log(i*barwidth, d, y(d[2])); return "translate(" + ( (i * barwidth) + margin.left)+ ","+ (margin.top/5 + (y(d[1] + d[2]))) +")" ;})
+    
+    bar2.append("rect")
+          .attr("width", barwidth)
+          .attr("height", function(d){return (height - (y(d[1] + d[2]))) ;})
+          .attr("fill","#3A8399");
+    bar1.append("rect")
+          .attr("width", barwidth)
+          .attr("height", function(d){return (height - y(d[1]));})
+          .attr("fill","orange");
+
+    bar1.append("text")
+          .attr("x", 0)
+          // .attr("font-size",barwidth+"px")
+          .attr("transform", function(d,i){return "translate("+ (0) +","+(height - y(d[1]))+") rotate(75) translate(10,0)" ;})
+          .attr("fill","#B63617")
+          .text(function(d) { return d[0];});
+
+    svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate("+(margin.left)+"," + (height + margin.top/5)  + ")")
+            .call(xAxis);
+    svg.append("g")
+            .attr("class", "y axis")
+            .attr("transform", "translate("+(margin.left)+"," + (margin.top/5)  + ")")
+            .call(yAxis);
 }
 
 function draw_hori_bc(dt){
@@ -65,7 +134,6 @@ function draw_hori_bc(dt){
 
     var data_hbc = dt['data_dict'];
     var l = data_hbc.length;
-    console.log(data_hbc);
     var barwidth = height/l;
 
     var x = d3.scale.ordinal().rangePoints([height,0]);
@@ -87,11 +155,11 @@ function draw_hori_bc(dt){
     bar2.append("rect")
           .attr("height", barwidth)
           .attr("width", function(d){return (y(d[2]));})
-          .attr("fill","#3A8399");
+          .attr("fill",global_colors['>50K']);
     bar1.append("rect")
           .attr("height", barwidth)
           .attr("width", function(d){return (y(d[1]));})
-          .attr("fill","orange");
+          .attr("fill",global_colors['<=50K']);
 
     bar1.append("text")
           .attr("x", (barwidth) / 2)
@@ -118,8 +186,8 @@ function draw_piechart(dt) {
         'Asian-Pac-Islander': '#f9dba0',
         'Other': '#633974',
         'Amer-Indian-Eskimo': '#2ca25f',
-        '<50K': 'orange',
-        '>=50K': '#3A8399'
+        '<=50K': global_colors['<=50K'],
+        '>50K': global_colors['>50K']
     }
 
     var data = []
@@ -128,13 +196,13 @@ function draw_piechart(dt) {
     for (var i = 0; i < dt.data_dict.length; i++) {
         if (i==0) {
             data.push([dt.data_dict[i][0], margin_add, dt.data_dict[i][1] + dt.data_dict[i][2], 'inner', dt.data_dict[i][1] + dt.data_dict[i][2]]);
-            data.push([dt.data_dict[i][0] + " <50K", margin_add, dt.data_dict[i][1], 'outer', dt.data_dict[i][1]]);
-            data.push([dt.data_dict[i][0] + " >=50K", dt.data_dict[i][1] + margin_add, dt.data_dict[i][1] + dt.data_dict[i][2], 'outer', dt.data_dict[i][2]]);
+            data.push([dt.data_dict[i][0] + " <=50K", margin_add, dt.data_dict[i][1], 'outer', dt.data_dict[i][1]]);
+            data.push([dt.data_dict[i][0] + " >50K", dt.data_dict[i][1] + margin_add, dt.data_dict[i][1] + dt.data_dict[i][2], 'outer', dt.data_dict[i][2]]);
             max_val = dt.data_dict[i][1] + dt.data_dict[i][2];
         } else {
             data.push([dt.data_dict[i][0], max_val + margin_add, max_val + dt.data_dict[i][1] + dt.data_dict[i][2], 'inner', dt.data_dict[i][1] + dt.data_dict[i][2]]);
-            data.push([dt.data_dict[i][0] + " <50K", max_val + margin_add, max_val + dt.data_dict[i][1], 'outer', dt.data_dict[i][1]]);
-            data.push([dt.data_dict[i][0] + " >=50K", max_val + dt.data_dict[i][1] + margin_add, max_val + dt.data_dict[i][1] + dt.data_dict[i][2], 'outer', dt.data_dict[i][2]]);
+            data.push([dt.data_dict[i][0] + " <=50K", max_val + margin_add, max_val + dt.data_dict[i][1], 'outer', dt.data_dict[i][1]]);
+            data.push([dt.data_dict[i][0] + " >50K", max_val + dt.data_dict[i][1] + margin_add, max_val + dt.data_dict[i][1] + dt.data_dict[i][2], 'outer', dt.data_dict[i][2]]);
             max_val = max_val + dt.data_dict[i][1] + dt.data_dict[i][2];
         }
     }
@@ -188,17 +256,22 @@ function draw_piechart(dt) {
 
     function pieMouseOver(d, i) {
         svg.select('#txtPie')
+            .attr("fill", colorCode[d[0]]?colorCode[d[0]]:colorCode[d[0].substr(d[0].length-5).trim()])
+            .attr('opacity', 0)
             .transition().duration(transition_duration*2)
-            .attr("fill", colorCode[d[0]]?colorCode[d[0]]:colorCode[d[0].substr(d[0].length-5).trim()]);
+            .attr('opacity', 1);
 
         svg.selectAll('text')
             .data((d[0]+' Count:'+d[4]+' Share:'+(Math.round((d[2]-d[1])*100))+'%').split(' '))
             .enter()
             .append('text')
-            .transition().duration(transition_duration*2)
             .attr('transform', function(d, i) {return 'translate(0, '+(-10+i*10)+')'})
             .text(function(d, i) { return d;})
-            .style('text-anchor', 'middle');
+            .style('text-anchor', 'middle')
+            .attr('opacity', 0)
+            .transition().duration(transition_duration*2)
+            .attr('opacity', 1)
+            ;
     }
 
     function pieMouseOut(d, i) {
@@ -259,7 +332,7 @@ function draw_pc(dt) {
 
     var data = []
     for (var i = 0; i < dt['data_dict'].length; i++) {
-        data.push({'Index': dt['data_dict'][i][0], 'Age':dt['data_dict'][i][1], 'FnlWgt':dt['data_dict'][i][2], 'CapitalGain':dt['data_dict'][i][3], 'CapitalLoss':dt['data_dict'][i][4], 'HrsPerWk':dt['data_dict'][i][5]})
+        data.push({'Index': dt['data_dict'][i][0], 'Age':dt['data_dict'][i][1], 'FnlWgt':dt['data_dict'][i][2], 'CapitalGain':dt['data_dict'][i][3], 'CapitalLoss':dt['data_dict'][i][4], 'HrsPerWk':dt['data_dict'][i][5], 'Income':dt['data_dict'][i][6]})
     }
 
     //Create the dimensions depending on attribute "type" (number|string)
@@ -276,7 +349,8 @@ function draw_pc(dt) {
         .selectAll("path")
             .data(data)
         .enter().append("path")
-            .attr("d", path);
+            .attr("d", path)
+            .attr("stroke", function(d,i){ return global_colors[d[6]];});
 
     // Add blue foreground lines for focus.
     foreground = svg.append("g")
@@ -284,7 +358,8 @@ function draw_pc(dt) {
         .selectAll("path")
             .data(data)
         .enter().append("path")
-            .attr("d", path);
+            .attr("d", path)
+            .attr("stroke", function(d,i){ return global_colors[d.Income];});
 
     // Add a group element for each dimension.
     var g = svg.selectAll(".dimension")

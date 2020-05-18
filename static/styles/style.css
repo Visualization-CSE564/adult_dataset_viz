@@ -5,13 +5,13 @@ svg {
 
 .background path {
     fill: none;
-    stroke: #ddd;
+    /*stroke: #ddd;*/
     shape-rendering: crispEdges;
 }
 
 .foreground path {
     fill: none;
-    stroke: steelblue;
+    /*stroke: steelblue;*/
 }
 
 .brush .extent {
