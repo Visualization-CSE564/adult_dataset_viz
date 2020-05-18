@@ -1,5 +1,13 @@
+body {
+    font-family: 'BenchNine', sans-serif;
+    font-size: 14px;
+}
+
+.quadHeader {
+    font-size: 30px;
+}
+
 svg {
-    font: 10px sans-serif;
     position: absolute;
 }
 

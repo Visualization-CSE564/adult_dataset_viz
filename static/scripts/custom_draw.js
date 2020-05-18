@@ -1,7 +1,7 @@
 var svg_position = {
     row1: {height: 120, width1: 1200},
     row2: {height: 400, width1: 750, width2: 450},
-    row3: {height: 250, width1: 450, width2: 300, width3: 450}
+    row3: {height: 300, width1: 450, width2: 300, width3: 450}
 }
 
 var global_colors = {
@@ -55,9 +55,15 @@ function init() {
 }
 
 function draw_bc(dt){
-    var margin = {top: 25, right: 25, bottom: 25, left: 25, text: 100},
+    var margin = {top: 50, right: 25, bottom: 25, left: 25, text: 90},
     width = svg_position.row3.width2 - margin.left - margin.right,
     height = svg_position.row3.height - margin.top - margin.bottom - margin.text;
+
+    d3.select('.stackedbar')
+        .append('text')
+        .attr('class', 'quadHeader')
+        .text("Demographic by Marital Status")
+        .attr('transform','translate('+margin.left+', 30)');
 
     var svg = d3.select(".stackedbar")
         .attr("width", width + margin.left + margin.right)
@@ -85,26 +91,25 @@ function draw_bc(dt){
     var bar1 = svg1.selectAll("g")
             .data(data_hbc)
             .enter().append("g")
-            .attr("transform", function(d, i) {console.log(i*barwidth, d, y(d[1])); return "translate(" + ( (i * barwidth) + margin.left)+ ","+ (margin.top/5 + y(d[1])) +")" ;})
+            .attr("transform", function(d, i) {return "translate(" + ( (i * barwidth) + margin.left)+ ","+ (margin.top/5 + y(d[1])) +")" ;})
     var bar2 = svg2.selectAll("g")
             .data(data_hbc)
             .enter().append("g")
-            .attr("transform", function(d, i) { console.log(i*barwidth, d, y(d[2])); return "translate(" + ( (i * barwidth) + margin.left)+ ","+ (margin.top/5 + (y(d[1] + d[2]))) +")" ;})
+            .attr("transform", function(d, i) {return "translate(" + ( (i * barwidth) + margin.left)+ ","+ (margin.top/5 + (y(d[1] + d[2]))) +")" ;})
     
     bar2.append("rect")
-          .attr("width", barwidth)
+          .attr("width", barwidth-2)
           .attr("height", function(d){return (height - (y(d[1] + d[2]))) ;})
           .attr("fill","#3A8399");
     bar1.append("rect")
-          .attr("width", barwidth)
+          .attr("width", barwidth-2)
           .attr("height", function(d){return (height - y(d[1]));})
           .attr("fill","orange");
 
     bar1.append("text")
           .attr("x", 0)
-          // .attr("font-size",barwidth+"px")
-          .attr("transform", function(d,i){return "translate("+ (0) +","+(height - y(d[1]))+") rotate(75) translate(10,0)" ;})
-          .attr("fill","#B63617")
+          .attr("transform", function(d,i){return "translate("+ (10) +","+(height - y(d[1]))+") rotate(75) translate(10,0)" ;})
+          // .attr("fill","#B63617")
           .text(function(d) { return d[0];});
 
     svg.append("g")
@@ -119,9 +124,15 @@ function draw_bc(dt){
 
 function draw_hori_bc(dt){
 
-    var margin = {top: 25, right: 25, bottom: 25, left: 25},
+    var margin = {top: 50, right: 25, bottom: 25, left: 25},
     width = svg_position.row3.width1 - margin.left - margin.right,
     height = svg_position.row3.height - margin.top - margin.bottom;
+
+    d3.select('.horizontalbar')
+        .append('text')
+        .attr('class', 'quadHeader')
+        .text("Demographic by Profession")
+        .attr('transform','translate('+(margin.left * 2)+', 30)');
 
     var svg = d3.select(".horizontalbar")
         .attr("width", width + margin.left + margin.right)
@@ -153,17 +164,16 @@ function draw_hori_bc(dt){
             .attr("transform", function(d, i) { return "translate(" + (margin.left/2 + y(d[1])) + "," + (i * barwidth + margin.top/5) +")" ;})
     
     bar2.append("rect")
-          .attr("height", barwidth)
+          .attr("height", barwidth-1)
           .attr("width", function(d){return (y(d[2]));})
           .attr("fill",global_colors['>50K']);
     bar1.append("rect")
-          .attr("height", barwidth)
+          .attr("height", barwidth-1)
           .attr("width", function(d){return (y(d[1]));})
           .attr("fill",global_colors['<=50K']);
 
     bar1.append("text")
           .attr("x", (barwidth) / 2)
-          .attr("font-size",barwidth+"px")
           .attr("transform", function(d,i){return "translate("+ (0) +","+(barwidth/2 + 3)+")" ;})
           .attr("fill","#B63617")
           .text(function(d) { return d[0];});
@@ -175,10 +185,16 @@ function draw_hori_bc(dt){
 }
 
 function draw_piechart(dt) {
-    var margin = {top: 50, right: 50, bottom: 50, left: 50},
+    var margin = {top: 70, right: 50, bottom: 30, left: 50},
     width = svg_position.row2.width2 - margin.left - margin.right,
     height = svg_position.row2.height - margin.top - margin.bottom;
     var radius = {r1: 50, r2: 100, r3: 150};
+
+    d3.select('.piechart')
+        .append('text')
+        .attr('class', 'quadHeader')
+        .text("Sunburst")
+        .attr('transform','translate('+margin.left+', 30)')
 
     var colorCode = {
         'White': '#82E0AA', 
@@ -265,7 +281,7 @@ function draw_piechart(dt) {
             .data((d[0]+' Count:'+d[4]+' Share:'+(Math.round((d[2]-d[1])*100))+'%').split(' '))
             .enter()
             .append('text')
-            .attr('transform', function(d, i) {return 'translate(0, '+(-10+i*10)+')'})
+            .attr('transform', function(d, i) {return 'translate(0, '+(-10+i*15)+')'})
             .text(function(d, i) { return d;})
             .style('text-anchor', 'middle')
             .attr('opacity', 0)
@@ -283,9 +299,15 @@ function draw_piechart(dt) {
 }
 
 function draw_pc(dt) {
-    var margin = {top: 50, right: 50, bottom: 50, left: 50},
+    var margin = {top: 90, right: 50, bottom: 10, left: 50},
     width = svg_position.row2.width1 - margin.left - margin.right,
     height = svg_position.row2.height - margin.top - margin.bottom;
+
+    d3.select('.parallelcoord')
+        .append('text')
+        .attr('class', 'quadHeader')
+        .text("Parallel Coordinates")
+        .attr('transform','translate('+margin.left+', 30)')
 
     var dimensions = [
         {
