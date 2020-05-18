@@ -10,7 +10,11 @@ app = Flask(__name__)
 def index():
     return render_template("index.html", data = {'text': 'Visualization Project'})
 
-@app.route("/pc", methods = ['POST', 'GET'])
+@app.route("/heatmap", methods = ['POST'])
+def data_heat():
+    return 1
+
+@app.route("/pc", methods = ['POST'])
 def data_load_pc():
     global dataframe
     data_df = dataframe.filter(['idx','age','fnlwgt','capital_gain','capital_loss','hours_per_week','income'], axis=1)
@@ -53,7 +57,9 @@ def horizontal_bar_data():
         pivot_df.loc[pivot_df['>50K'].isnull() , '>50K'] = 0
         pivot_df.loc[pivot_df['<=50K'].isnull() , '<=50K'] = 0
         pivot_df.reset_index(inplace=True)
-        return {"data_dict" : pivot_df.values.tolist()}
+        s_df = pivot_df.values.tolist()
+        s_df.sort(key = lambda x: -x[1] - x[2])
+        return {"data_dict" : s_df}
     else:
         filter_df = data_df[data_df['idx'].isin(request.form['list'])]
         new_filter_df = filter_df.groupby(by = ['occupation','income'])
@@ -63,7 +69,9 @@ def horizontal_bar_data():
         pivot_df.loc[pivot_df['>50K'].isnull() , '>50K'] = 0
         pivot_df.loc[pivot_df['<=50K'].isnull() , '<=50K'] = 0
         pivot_df.reset_index(inplace=True)
-        return {"data_dict" : pivot_df.values.tolist()}
+        s_df = pivot_df.values.tolist()
+        s_df.sort(key = lambda x: -x[1] - x[2])
+        return {"data_dict" : s_df}
 
 @app.route("/barch", methods = ['POST'])
 def bar_data():

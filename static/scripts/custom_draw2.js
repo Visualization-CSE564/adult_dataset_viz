@@ -40,8 +40,8 @@ function init() {
         .attr("height", svg_position.row3.height)
         .style("top", svg_position.row1.height + svg_position.row2.height)
         .style("left", svg_position.row3.width1 + svg_position.row3.width2);
-    $.post("/barch", {}, function(data_infunc){
-            draw_bc(data_infunc);
+    $.post("/hori_bc", {}, function(data_infunc){
+            draw_hori_bc(data_infunc);
         });
 
 }
