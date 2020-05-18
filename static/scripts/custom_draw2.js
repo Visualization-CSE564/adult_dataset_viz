@@ -105,7 +105,7 @@ function draw_hori_bc(dt){
 
 function draw_bc(dt){
     var margin = {top: 25, right: 25, bottom: 25, left: 25},
-    width = svg_position.row3.width1 - margin.left - margin.right,
+    width = svg_position.row3.width2 - margin.left - margin.right,
     height = svg_position.row3.height - margin.top - margin.bottom;
 
     var svg = d3.select(".stackedbar")
@@ -120,9 +120,9 @@ function draw_bc(dt){
     var data_hbc = dt['data_dict'];
     var l = data_hbc.length;
     console.log(data_hbc);
-    var barwidth = width/l;
+    var barwidth = (width-margin.right)/l;
 
-    var x = d3.scale.ordinal().rangePoints([0,width]);
+    var x = d3.scale.ordinal().rangePoints([0,width - margin.right]);
     var y = d3.scale.linear().domain([0, d3.max(data_hbc, function(d){return d[1]+d[2]})]).range([height,0]);
 
     var xAxis = d3.svg.axis()
@@ -135,27 +135,27 @@ function draw_bc(dt){
     var bar1 = svg1.selectAll("g")
             .data(data_hbc)
             .enter().append("g")
-            .attr("transform", function(d, i) { return "translate(" + ( (i * barwidth) + margin.left)+ ","+ (height - y(d[1]) + margin.bottom/5) +")" ;})
+            .attr("transform", function(d, i) {console.log(i*barwidth, d, y(d[1])); return "translate(" + ( (i * barwidth) + margin.left)+ ","+ (margin.top/5 + y(d[1])) +")" ;})
     var bar2 = svg2.selectAll("g")
             .data(data_hbc)
             .enter().append("g")
-            .attr("transform", function(d, i) { return "translate(" + ( (i * barwidth) + margin.left)+ ","+ ((y(d[1]) + y(d[2])) + margin.bottom) +")" ;})
+            .attr("transform", function(d, i) { console.log(i*barwidth, d, y(d[2])); return "translate(" + ( (i * barwidth) + margin.left)+ ","+ (margin.top/5 + (y(d[1] + d[2]))) +")" ;})
     
     bar2.append("rect")
           .attr("width", barwidth)
-          .attr("height", function(d){return (y(d[2]));})
+          .attr("height", function(d){return (height - (y(d[1] + d[2]))) ;})
           .attr("fill","#3A8399");
     bar1.append("rect")
           .attr("width", barwidth)
-          .attr("height", function(d){return (y(d[1]));})
+          .attr("height", function(d){return (height - y(d[1]));})
           .attr("fill","orange");
 
-    // bar1.append("text")
-    //       .attr("x", (barwidth) / 2)
-    //       .attr("font-size",barwidth+"px")
-    //       .attr("transform", function(d,i){return "translate("+ (0) +","+(barwidth/2 + 3)+")" ;})
-    //       .attr("fill","#B63617")
-    //       .text(function(d) { return d[0];});
+    bar1.append("text")
+          .attr("x", 0)
+          // .attr("font-size",barwidth+"px")
+          .attr("transform", function(d,i){return "translate("+ (i*barwidth) +","+(barwidth/2 + 3)+")" ;})
+          .attr("fill","#B63617")
+          .text(function(d) { return d[0];});
 
     svg.append("g")
             .attr("class", "x axis")
