@@ -3,16 +3,38 @@ from flask import Flask, render_template, request, redirect, Response, jsonify
 import pandas as pd
 import numpy as np
 import math
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, StandardScaler
 
 app = Flask(__name__)
+
+def transform_data(df):
+    categorical = ["workclass","marital_status","occupation","relationship","race","sex","native_country"]
+    ordinal = ["education"]
+    education_ordering = ["","Preschool","1st-4th","5th-6th","7th-8th","9th","10th","11th","12th","HS-grad","Prof-school","Assoc-acdm","Assoc-voc","Some-college","Bachelors","Masters","Doctorate"]
+    numerical = ["age","fnlwgt","education_num","capital_gain","capital_loss","hours_per_week"]
+    ohe = OneHotEncoder(sparse=False, drop='first')
+    categorical_df = ohe.fit_transform(df[categorical])
+    categorical_df = pd.DataFrame(categorical_df, columns = ohe.get_feature_names())
+    oe = OrdinalEncoder(categories = [education_ordering])
+    ordinal_df = oe.fit_transform(df[ordinal])
+    ordinal_df = pd.DataFrame(ordinal_df, columns = ordinal)
+    ordinal_df = pd.DataFrame(StandardScaler().fit_transform(ordinal_df), columns = ordinal_df.columns)
+    ss = StandardScaler()
+    numerical_df = pd.DataFrame(ss.fit_transform(df[numerical]), columns = df[numerical].columns)  
+    final_df = pd.concat([numerical_df, categorical_df, ordinal_df], axis=1)    
+    return final_df
 
 @app.route("/", methods = ['POST', 'GET'])
 def index():
     return render_template("index.html", data = {'text': 'Visualization Project'})
 
-@app.route("/heatmap", methods = ['POST'])
-def data_heat():
-    return 1
+@app.route("/getpca", methods = ['POST'])
+def get_pca_two_plot():
+    global pca_data
+    pca = PCA(n_components = 2).fit_transform(pca_data)
+    print(pca)
+    return {'data_dict': pca.tolist()}
 
 @app.route("/pc", methods = ['POST'])
 def data_load_pc():
@@ -101,9 +123,11 @@ def load_data():
     full_data = pd.read_csv("static/data/sample_adult2.csv",header=0)
     l = full_data.shape[0]
     idx = list(range(1,l+1))
+    t_data = transform_data(full_data)
     full_data.insert(0, "idx", idx, True)
-    return full_data
+    t_data.insert(0, "idx", idx, True)
+    return full_data,t_data
 
 if __name__ == '__main__':
-    dataframe = load_data()
+    dataframe, pca_data= load_data()
     app.run(debug=True)
