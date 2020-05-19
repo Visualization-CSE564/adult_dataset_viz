@@ -34,10 +34,9 @@ def index():
 @app.route("/getpca", methods = ['POST'])
 def get_pca_two_plot():
     global pca_data, dataframe
-    print(pca_data.columns)
     if 'list' not in request.form:
         pca_data2 = pca_data.drop(columns = ['idx'] , axis = 1)
-        return {'data_dict': pca_data.values.tolist()}
+        return {'data_dict': pca_data2.values.tolist()}
     else:
         s = request.form['list']
         i = request.form['income_filter']
