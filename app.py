@@ -35,13 +35,17 @@ def index():
 def get_pca_two_plot():
     global pca_data, dataframe
     if 'list' not in request.form:
+        df_income = dataframe['income']
+        pca_data['income'] = df_income
         pca_data2 = pca_data.drop(columns = ['idx'] , axis = 1)
         return {'data_dict': pca_data2.values.tolist()}
     else:
         s = request.form['list']
         filter_df = dataframe.loc[eval(s)]
+        df_income = filter_df['income']
         df_i = filter_df['idx']
         pca_data2 = pca_data[pca_data['idx'].isin(df_i)]
+        pca_data2['income'] = df_income
         pca_data2 = pca_data2.drop(columns = 'idx' , axis = 1)
         return {'data_dict': pca_data2.values.tolist()}
 
