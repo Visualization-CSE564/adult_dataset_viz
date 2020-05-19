@@ -50,13 +50,20 @@ function init() {
 
     $.post("/pc", {}, draw_pc);
     $.post("/getpca",{},draw_pca);
-    draw_non_standard();
+    draw_non_standard('');
 }
 
-function draw_non_standard() {
-    $.post("/piechart", {}, draw_piechart);
-    $.post("/hori_bc", {}, draw_hori_bc);
-    $.post("/barch", {}, draw_bc);
+function draw_non_standard(filter_string) {
+    if (filter_string === '') {
+        $.post("/piechart", {}, draw_piechart);
+        $.post("/hori_bc", {}, draw_hori_bc);
+        $.post("/barch", {}, draw_bc);
+    } else {
+        console.log({'list': filter_string})
+        $.post("/piechart", {'list': filter_string}, draw_piechart);
+        // $.post("/hori_bc", {}, draw_hori_bc);
+        // $.post("/barch", {}, draw_bc);
+    }
 }
 
 
@@ -381,9 +388,9 @@ function draw_piechart(dt) {
     }
 
     function pieMouseClick(d, i) {
-        components = d[0].split(' ')
-        string = "(dataframe.race == '" + components[0] + "') & (dataframe.income == '" + components[1] + "')"
-        console.log(string)
+        components = d[0].split(' ');
+        string = "(dataframe.race == '" + components[0] + "') & (dataframe.income == '" + components[1] + "')";
+        draw_non_standard(string);
     }
 }
 
