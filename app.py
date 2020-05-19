@@ -56,13 +56,19 @@ def pie_data():
         pivot_df.reset_index(inplace=True)
         return {"data_dict" : pivot_df.values.tolist()}
     else:
-        filter_df = data_df[data_df['idx'].isin(request.form['list'])]
+        s = request.form['list'] 
+        i = request.form['income_filter']
+        filter_df = data_df.loc[eval(s)]
+        print(filter_df)
+        # filter_df = data_df[data_df['idx'].isin(request.form['list'])]
         new_filter_df = filter_df.groupby(by = ['race','income'])
         new_filter_df = new_filter_df.count()
         new_filter_df.reset_index(inplace=True)
         pivot_df = new_filter_df.pivot(index= 'race', columns = 'income' , values = 'idx')
-        pivot_df.loc[pivot_df['>50K'].isnull() , '>50K'] = 0
-        pivot_df.loc[pivot_df['<=50K'].isnull() , '<=50K'] = 0
+        if (i == '>50K' or i == 'None'):
+            pivot_df.loc[pivot_df['>50K'].isnull() , '>50K'] = 0
+        if (i == '<=50K' or i == 'None'):
+            pivot_df.loc[pivot_df['<=50K'].isnull() , '<=50K'] = 0
         pivot_df.reset_index(inplace=True)
         return {"data_dict" : pivot_df.values.tolist()}
 
@@ -71,7 +77,6 @@ def pie_data():
 def horizontal_bar_data():
     global dataframe
     data_df = dataframe.filter(['occupation','income','idx'],axis=1)
-    print(dataframe.columns)
     if 'list' not in request.form:
         filter_df = data_df.groupby(by = ['occupation','income']).count()
         filter_df.reset_index(inplace=True)

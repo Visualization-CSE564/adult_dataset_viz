@@ -49,17 +49,34 @@ function init() {
         .style("left", svg_position.row3.width1 + svg_position.row3.width2);
 
     $.post("/pc", {}, draw_pc);
-    $.post("/piechart", {}, draw_piechart);
-    $.post("/hori_bc", {}, draw_hori_bc);
-    $.post("/barch", {}, draw_bc);
     $.post("/getpca",{},draw_pca);
+    draw_non_standard('');
+}
+
+function draw_non_standard(filter_string, income_filter) {
+    if (filter_string === '') {
+        $.post("/piechart", {}, draw_piechart);
+        $.post("/hori_bc", {}, draw_hori_bc);
+        $.post("/barch", {}, draw_bc);
+    } else {
+        console.log({'list': filter_string, 'income_filter': income_filter})
+        $.post("/piechart", {'list': filter_string, 'income_filter': income_filter}, draw_piechart);
+        // $.post("/hori_bc", {}, draw_hori_bc);
+        // $.post("/barch", {}, draw_bc);
+    }
 }
 
 
 function draw_pca(dt){
-    var margin = {top: 50, right: 25, bottom: 25, left: 25, text: 90},
+    var margin = {top: 50, right: 25, bottom: 60, left: 25, text: 90},
     width = svg_position.row3.width3 - margin.left - margin.right,
-    height = svg_position.row3.height - margin.top - margin.bottom - margin.text;
+    height = svg_position.row3.height - margin.top - margin.bottom;
+
+    d3.select('.insights')
+        .append('text')
+        .attr('class', 'quadHeader')
+        .text("PCA Plot")
+        .attr('transform','translate('+(margin.left * 2)+', 30)');
 
     var svg = d3.select(".insights")
         .attr("width", width + margin.left + margin.right)
@@ -109,7 +126,7 @@ function draw_pca(dt){
 
     svg.append("text")
         .attr("class","axis")
-        .attr("transform", "rotate(-90) translate("+ (height/2 - 4*margin.top) +","+( margin.left/5 - 15 )+")" )
+        .attr("transform", "rotate(-90) translate("+ (height/2 - 5*margin.top) +","+( margin.left/5 - 15 )+")" )
         .text("Component 2")
 
     xMap = function(d) { return x(d[0] );};
@@ -129,7 +146,7 @@ function draw_pca(dt){
         // .transition().duration(1500)
         // .style("opacity","1");
 
-    }
+}
 
 
 function draw_bc(dt){
@@ -271,7 +288,7 @@ function draw_piechart(dt) {
     d3.select('.piechart')
         .append('text')
         .attr('class', 'quadHeader')
-        .text("Sunburst")
+        .text("Demographic by Race")
         .attr('transform','translate('+margin.left+', 30)')
 
     var colorCode = {
@@ -315,7 +332,8 @@ function draw_piechart(dt) {
         .attr('d', path)
         .attr("fill", function(d, i) {return colorCode[d[0]]?colorCode[d[0]]:colorCode[d[0].substr(d[0].length-5).trim()];})
         .on("mouseover", pieMouseOver)
-        .on("mouseout", pieMouseOut);
+        .on("mouseout", pieMouseOut)
+        .on("click", pieMouseClick);
 
     var textPth = d3.svg.arc()({
         startAngle: 0,
@@ -374,6 +392,18 @@ function draw_piechart(dt) {
             .attr("fill", 'white');
         svg.selectAll('text').remove()
     }
+
+    function pieMouseClick(d, i) {
+        components = d[0].split(' ');
+        console.log(components)
+        if (components.length==2) {
+            string = "(dataframe.race == '" + components[0] + "') & (dataframe.income == '" + components[1] + "')";
+            draw_non_standard(string, components[1]);  
+        } else {
+            string = "(dataframe.race == '" + components[0] + "')"
+            draw_non_standard(string, "None")
+        }
+    }
 }
 
 function draw_pc(dt) {
@@ -384,7 +414,7 @@ function draw_pc(dt) {
     d3.select('.parallelcoord')
         .append('text')
         .attr('class', 'quadHeader')
-        .text("Parallel Coordinates")
+        .text("Demographic Distribution")
         .attr('transform','translate('+margin.left+', 30)')
 
     var dimensions = [
