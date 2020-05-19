@@ -33,7 +33,7 @@ def index():
 
 @app.route("/getpca", methods = ['POST'])
 def get_pca_two_plot():
-    global pca_data, dataframe
+    global pca_data, dataframe, rs
     if 'list' not in request.form:
         df_income = dataframe['income']
         pca_data['income'] = df_income
@@ -44,23 +44,30 @@ def get_pca_two_plot():
         filter_df = dataframe.loc[eval(s)]
         df_income = filter_df['income']
         df_i = filter_df['idx']
-        pca_data2 = pca_data[pca_data['idx'].isin(df_i)]
+        rs_i = rs['idx']
+        pca_data2 = pca_data[pca_data['idx'].isin(df_i & rs_i)]
         pca_data2['income'] = df_income
         pca_data2 = pca_data2.drop(columns = 'idx' , axis = 1)
         return {'data_dict': pca_data2.values.tolist()}
 
+
+def random_sample(full_data):
+    sample_indicator = np.random.binomial(1, 0.25, full_data.shape[0])
+    return full_data[sample_indicator==1]
+
 @app.route("/pc", methods = ['POST'])
 def data_load_pc():
-    global dataframe
+    global dataframe, rs
     if 'list' not in request.form:
-        data_df = dataframe.filter(['idx','age','fnlwgt','capital_gain','capital_loss','hours_per_week','income'], axis=1)
+        data_df = rs.filter(['idx','age','fnlwgt','capital_gain','capital_loss','hours_per_week','income'], axis=1)
         return {"data_dict" : data_df.values.tolist()}
     else:
         s = request.form['list']
         filter_df = dataframe.loc[eval(s)]
         df_i = filter_df['idx']
+        rs_i = rs['idx']
         data_df = filter_df.filter(['idx','age','fnlwgt','capital_gain','capital_loss','hours_per_week','income'], axis=1)
-        data_df = data_df[data_df['idx'].isin(df_i)]
+        data_df = data_df[data_df['idx'].isin(df_i & rs_i)]
         return {"data_dict" : data_df.values.tolist()}
 
 @app.route("/piechart", methods = ['POST'])
@@ -180,8 +187,9 @@ def load_data():
     t_data = transform_data(full_data)
     full_data.insert(0, "idx", idx, True)
     t_data.insert(0, "idx", idx, True)
-    return full_data,t_data
+    random_s = random_sample(full_data)
+    return full_data,t_data,random_s
 
 if __name__ == '__main__':
-    dataframe, pca_data= load_data()
+    dataframe, pca_data, rs= load_data()
     app.run(debug=True)
