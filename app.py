@@ -39,7 +39,6 @@ def get_pca_two_plot():
         return {'data_dict': pca_data2.values.tolist()}
     else:
         s = request.form['list']
-        i = request.form['income_filter']
         filter_df = dataframe.loc[eval(s)]
         df_i = filter_df['idx']
         pca_data2 = pca_data[pca_data['idx'].isin(df_i)]
@@ -49,8 +48,16 @@ def get_pca_two_plot():
 @app.route("/pc", methods = ['POST'])
 def data_load_pc():
     global dataframe
-    data_df = dataframe.filter(['idx','age','fnlwgt','capital_gain','capital_loss','hours_per_week','income'], axis=1)
-    return {"data_dict" : data_df.values.tolist()}
+    if 'list' not in request.form:
+        data_df = dataframe.filter(['idx','age','fnlwgt','capital_gain','capital_loss','hours_per_week','income'], axis=1)
+        return {"data_dict" : data_df.values.tolist()}
+    else:
+        s = request.form['list']
+        filter_df = dataframe.loc[eval(s)]
+        df_i = filter_df['idx']
+        data_df = filter_df.filter(['idx','age','fnlwgt','capital_gain','capital_loss','hours_per_week','income'], axis=1)
+        data_df = data_df[data_df['idx'].isin(df_i)]
+        return {"data_dict" : data_df.values.tolist()}
 
 @app.route("/piechart", methods = ['POST'])
 def pie_data():
