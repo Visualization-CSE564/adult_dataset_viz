@@ -170,6 +170,7 @@ function draw_pca(dt, update){
         .orient("left");
 
     if (update) {
+        console.log(data)
         d3.select('.insights').selectAll('circle').remove();
         draw_pca_cirles(d3.select('.insights').select('#drawArea'));
         return;

@@ -35,20 +35,13 @@ def index():
 def get_pca_two_plot():
     global pca_data, dataframe, rs
     if 'list' not in request.form:
-        # df_income = pca['income']
-        # pca_data['income'] = df_income
         pca_data2 = pca_data.drop(columns = ['idx'] , axis = 1)
         return {'data_dict': pca_data2.values.tolist()}
     else:
         s = request.form['list']
-        # filter_df = dataframe.loc[eval(s)]
         filter_df = rs.loc[eval(s)]
-        # df_income = filter_df['income']
-        # df_i = filter_df['idx']
-        rs_i = rs['idx']
-        # pca_data['income'] = df_income
+        rs_i = filter_df['idx'].tolist()
         pca_data2 = pca_data[pca_data['idx'].isin(rs_i)]
-        # pca_data2['income'] = df_income
         pca_data2 = pca_data2.drop(columns = 'idx' , axis = 1)
         return {'data_dict': pca_data2.values.tolist()}
 
@@ -183,6 +176,7 @@ def load_data():
     idx = list(range(1,l+1))
     full_data.insert(0, "idx", idx, True)
     random_s = pd.read_csv("static/data/r_adult.csv",header=0)
+    random_s.drop(columns = ['Unnamed: 0'], axis=1, inplace=True)
     r_idx = random_s['idx']
     r_income = random_s['income']
     t_data = transform_data(random_s.drop(columns = ['idx'] , axis = 1))
