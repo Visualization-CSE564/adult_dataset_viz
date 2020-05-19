@@ -1,12 +1,13 @@
 var svg_position = {
     row1: {height: 120, width1: 1200},
-    row2: {height: 400, width1: 750, width2: 450},
+    row2: {height: 400, width1: 750, width2: 300, width3: 150},
     row3: {height: 300, width1: 450, width2: 300, width3: 450}
 }
 
 var global_colors = {
-    "<=50K": "orange",
-    ">50K": "#3A8399"
+    "<=50K": "#FFA443",
+    ">50K": "#7FBBD8",
+    "barText": "#FF0000"
 }
 
 var transition_duration = 200;
@@ -30,6 +31,12 @@ function init() {
         // .style("top", svg_position.row1.height)
         // .style("left", svg_position.row2.width1);
 
+    d3.select(".legends")
+        .attr("width", svg_position.row2.width3)
+        .attr("height", svg_position.row2.height)
+        // .style("top", svg_position.row1.height)
+        // .style("left", svg_position.row2.width1);
+
     d3.select(".horizontalbar")
         .attr("width", svg_position.row3.width1)
         .attr("height", svg_position.row3.height)
@@ -48,42 +55,41 @@ function init() {
         // .style("top", svg_position.row1.height + svg_position.row2.height)
         // .style("left", svg_position.row3.width1 + svg_position.row3.width2);
 
-    $.post("/pc", {}, draw_pc);
+    draw_legends();
     draw_all('');
+}
+
+function draw_legends() {
+    margin = {left:25}
+    d3.select('.legends')
+        .append('text')
+        .attr('transform', 'translate('+margin.left+', 30)')
+        .attr('class', 'quadHeader')
+        .text('Legends')
 }
 
 function draw_all(filter_string, income_filter) {
     if (filter_string === '') {
         $.post("/piechart", {}, draw_piechart);
         $.post("/hori_bc", {}, draw_hori_bc);
-        $.post("/getpca",{},draw_pca);
         $.post("/barch", {}, draw_bc);
+        $.post("/getpca",{}, function(d) {draw_pca(d, false)});
+        $.post("/pc", {}, function(d) {draw_pc(d, false)});
     } else {
         console.log({'list': filter_string, 'income_filter': income_filter})
         $.post("/piechart", {'list': filter_string, 'income_filter': income_filter}, draw_piechart);
         $.post("/hori_bc", {'list': filter_string, 'income_filter': income_filter}, draw_hori_bc);
         $.post("/barch", {'list': filter_string, 'income_filter': income_filter}, draw_bc);
-        $.post("/getpca", {'list': filter_string, 'income_filter': income_filter},draw_pca);
+        $.post("/getpca", {'list': filter_string, 'income_filter': income_filter},function(d) {draw_pca(d, true)});
+        $.post("/pc", {'list': filter_string, 'income_filter': income_filter}, function(d) {draw_pc(d, true)});
     }
 }
 
 
-function draw_pca(dt){
+function draw_pca(dt, update){
     var margin = {top: 50, right: 25, bottom: 60, left: 25, text: 90},
     width = svg_position.row3.width3 - margin.left - margin.right,
     height = svg_position.row3.height - margin.top - margin.bottom;
-
-    d3.select('.insights')
-        .append('text')
-        .attr('class', 'quadHeader')
-        .text("PCA Plot")
-        .attr('transform','translate('+(margin.left * 2)+', 30)');
-
-    var svg = d3.select(".insights")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom + margin.text)
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
     
     var data = dt['data_dict'];
     
@@ -111,6 +117,25 @@ function draw_pca(dt){
         .scale(ydash)
         .orient("left");
 
+    if (update) {
+        d3.select('.insights').selectAll('circle').remove();
+        draw_pca_cirles(d3.select('.insights').select('#drawArea'));
+        return;
+    }
+
+    d3.select('.insights')
+        .append('text')
+        .attr('class', 'quadHeader')
+        .text("PCA Plot")
+        .attr('transform','translate('+(margin.left * 2)+', 30)');
+
+    var svg = d3.select(".insights")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom + margin.text)
+        .append("g")
+        .attr('id', 'drawArea')
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
     svg.append("g")
         .attr("class", "x axis")
         .attr("transform", "translate("+(margin.left)+"," + (height + margin.top/5)  + ")")
@@ -132,21 +157,23 @@ function draw_pca(dt){
 
     xMap = function(d) { return x(d[0]) + margin.left;};
     yMap = function(d) { return y(d[1]);}; 
-        // console.log(xMap,yMap);
 
-    var cir = svg.selectAll("circle")
-        .data(data)
-        .enter().append("circle")
-        .attr("stroke", "red")
-        .attr("stroke-width", "0")
-        .attr("fill", "red")
-        .attr("r", 1.5)
-        .attr("cx", (xMap))
-        .attr("cy", (yMap))
-        // .style("opacity","0")
-        // .transition().duration(1500)
-        // .style("opacity","1");
+    draw_pca_cirles(svg);
 
+    function draw_pca_cirles(drawA) {
+        var cir = drawA.selectAll("circle")
+            .data(data)
+            .enter().append("circle")
+            .attr("stroke", "red")
+            .attr("stroke-width", "0")
+            .attr("fill", function(d){ return global_colors[d[2]]})
+            .attr("r", 1.5)
+            .attr("cx", (xMap))
+            .attr("cy", (yMap))
+            .style("opacity","0")
+            .transition().duration(1500)
+            .style("opacity","1");
+    }
 }
 
 
@@ -189,25 +216,49 @@ function draw_bc(dt){
             .data(data_hbc)
             .enter().append("g")
             .attr("transform", function(d, i) {return "translate(" + ( (i * barwidth) + margin.left)+ ","+ (margin.top/5 + y(d[1])) +")" ;})
+            .on("mouseover", stackedBar1MouseOver)
+            .on("mouseout", stackedBar1MouseOut)
+            .on("click", stackedBar1MouseClick);
+
     var bar2 = svg2.selectAll("g")
             .data(data_hbc)
             .enter().append("g")
             .attr("transform", function(d, i) {return "translate(" + ( (i * barwidth) + margin.left)+ ","+ (margin.top/5 + (y(d[1] + d[2]))) +")" ;})
-    
+            .on("mouseover", stackedBar2MouseOver)
+            .on("mouseout", stackedBar2MouseOut)  
+            .on("click", stackedBar2MouseClick);
+
     bar2.append("rect")
-          .attr("width", barwidth-2)
-          .attr("height", function(d){return (height - (y(d[1] + d[2]))) ;})
-          .attr("fill","#3A8399");
+        .attr("width", barwidth-2)
+        .attr("height", function(d){return (height - y(d[2])) ;})
+        .attr("fill",global_colors[">50K"]);
     bar1.append("rect")
-          .attr("width", barwidth-2)
-          .attr("height", function(d){return (height - y(d[1]));})
-          .attr("fill","orange");
+        .attr("width", barwidth-2)
+        .attr("height", function(d){return (height - y(d[1]));})
+        .attr("fill",global_colors["<=50K"]);
 
     bar1.append("text")
-          .attr("x", 0)
-          .attr("transform", function(d,i){return "translate("+ (10) +","+(height - y(d[1]))+") rotate(75) translate(10,0)" ;})
-          // .attr("fill","#B63617")
-          .text(function(d) { return d[0];});
+        .attr("x", 0)
+        .attr("transform", function(d,i){return "translate("+ (10) +","+(height - y(d[1]))+") rotate(75) translate(10,0)" ;})
+        .text(function(d) { return d[0];});
+
+    bar1.append("text")
+        .attr('x', barwidth/2)
+        .attr('y', function(d){return -height + y(d[2]) + (height - y(d[1]+d[2]))/2;})
+        .text(function(d){return d[1]})
+        .style('text-anchor', 'middle')
+        .attr("fill",global_colors["barText"])
+        .style('opacity', 0)
+        .attr('id', function(d,i){return "stackedBar1_"+i})
+
+    bar1.append("text")
+        .attr('x', barwidth/2)
+        .attr('y', function(d){return -height + y(d[2]) + (height - y(d[1]+d[2]))/2;})
+        .text(function(d){return d[2]})
+        .style('text-anchor', 'middle')
+        .attr("fill",global_colors["barText"])
+        .style('opacity', 0)
+        .attr('id', function(d,i){return "stackedBar2_"+i})
 
     svg.append("g")
             .attr("class", "x axis")
@@ -217,6 +268,27 @@ function draw_bc(dt){
             .attr("class", "y axis")
             .attr("transform", "translate("+(margin.left)+"," + (margin.top/5)  + ")")
             .call(yAxis);
+
+    function stackedBar1MouseOver(d, i) {
+        d3.select('#stackedBar1_'+i).transition().duration(transition_duration).style('opacity',1)
+    }
+    function stackedBar1MouseOut(d, i) {
+        d3.select('#stackedBar1_'+i).transition().duration(transition_duration).style('opacity',0) 
+    }
+    function stackedBar2MouseOver(d, i) {
+        d3.select('#stackedBar2_'+i).transition().duration(transition_duration).style('opacity',1)
+    }
+    function stackedBar2MouseOut(d, i) {
+        d3.select('#stackedBar2_'+i).transition().duration(transition_duration).style('opacity',0) 
+    }
+    function stackedBar1MouseClick(d, i) {
+        string = "(dataframe.marital_status == '" + d[0] + "')";
+        draw_all(string,'None');  
+    }
+    function stackedBar2MouseClick(d, i) {
+        string = "(dataframe.marital_status == '" + d[0] + "')";
+        draw_all(string,'None');  
+    }
 }
 
 function draw_hori_bc(dt){
@@ -257,6 +329,7 @@ function draw_hori_bc(dt){
             .attr("transform", function(d, i) { return "translate(" + (margin.left/2)+ ","+ (i * barwidth + margin.top/5) +")" ;})
             .on("mouseover", horiBar1MouseOver)
             .on("mouseout", horiBar1MouseOut)
+            .on("click", horiBar1MouseClick);
 
     var bar2 = svg2.selectAll("g")
             .data(data_hbc)
@@ -264,6 +337,7 @@ function draw_hori_bc(dt){
             .attr("transform", function(d, i) { return "translate(" + (margin.left/2 + y(d[1])) + "," + (i * barwidth + margin.top/5) +")" ;})
             .on("mouseover", horiBar2MouseOver)
             .on("mouseout", horiBar2MouseOut)
+            .on("click", horiBar2MouseClick);
     
     bar2.append("rect")
           .attr("height", barwidth-1)
@@ -274,14 +348,11 @@ function draw_hori_bc(dt){
           .attr("width", function(d){return (y(d[1]));})
           .attr("fill",global_colors['<=50K']);
 
-    // bar1.append("text")
-    //     .text(function(d){return d[1]})
-
     bar2.append("text")
         .attr('id', function(d,i){ return 'hori_bc_bar_txt'+i})
         .attr("x", (barwidth) / 2)
         .attr("transform", function(d,i){return "translate("+ (-y(d[1])) +","+(barwidth/2 + 3)+")" ;})
-        .attr("fill","#B63617")
+        .attr("fill",global_colors["barText"])
         .text(function(d) { return d[0];});
 
     svg.append("g")
@@ -293,6 +364,7 @@ function draw_hori_bc(dt){
         .text(function(d){return d[0]+' (>50K): '+d[2]})
         .attr('x', function(d){return 8-y(d[1])})
         .attr('y', 12)
+        .attr("fill",global_colors["barText"])
         .style('opacity', 0)
         .attr('id', function(d,i){return "hori_bc_bar2"+i})
 
@@ -300,32 +372,40 @@ function draw_hori_bc(dt){
         .text(function(d){return d[0]+' (<=50K): '+d[1]})
         .attr('x', function(d){return 8})
         .attr('y', 12)
+        .attr("fill",global_colors["barText"])
         .style('opacity', 0)
         .attr('id', function(d,i){return "hori_bc_bar1"+i})
 
     function horiBar1MouseOver(d, i) {
         d3.select('#hori_bc_bar1'+i).style('opacity',1)
-        d3.select('.hori_bc_bar_txt'+i).style('opacity', 0)        
+        d3.select('#hori_bc_bar_txt'+i).style('opacity', 0)        
     }
-
     function horiBar1MouseOut(d, i) {
         d3.select('#hori_bc_bar1'+i).style('opacity',0)
-        d3.select('.hori_bc_bar_txt'+i).style('opacity', 1)        
+        d3.select('#hori_bc_bar_txt'+i).style('opacity', 1)        
+    }
+    function horiBar1MouseClick(d, i) {
+        string = "(dataframe.occupation == '" + d[0] + "')";
+        draw_all(string,'None');  
     }
     function horiBar2MouseOver(d, i) {
         d3.select('#hori_bc_bar2'+i).style('opacity',1)
-        d3.select('.hori_bc_bar_txt'+i).style('opacity', 0)
+        d3.select('#hori_bc_bar_txt'+i).style('opacity', 0)
     }
     function horiBar2MouseOut(d, i) {
         d3.select('#hori_bc_bar2'+i).style('opacity',0)
-        d3.select('.hori_bc_bar_txt'+i).style('opacity', 1)
+        d3.select('#hori_bc_bar_txt'+i).style('opacity', 1)
+    }
+    function horiBar2MouseClick(d, i) {
+        string = "(dataframe.occupation == '" + d[0] + "')";
+        draw_all(string,'None');  
     }
 }
 
 function draw_piechart(dt) {
     d3.select('.piechart').html('');
 
-    var margin = {top: 70, right: 50, bottom: 30, left: 50},
+    var margin = {top: 70, right: 25, bottom: 30, left: 25},
     width = svg_position.row2.width2 - margin.left - margin.right,
     height = svg_position.row2.height - margin.top - margin.bottom;
     var radius = {r1: 50, r2: 100, r3: 150};
@@ -440,7 +520,6 @@ function draw_piechart(dt) {
 
     function pieMouseClick(d, i) {
         components = d[0].split(' ');
-        console.log(components)
         if (components.length==2) {
             string = "(dataframe.race == '" + components[0] + "') & (dataframe.income == '" + components[1] + "')";
             draw_all(string, components[1]);  
@@ -451,16 +530,10 @@ function draw_piechart(dt) {
     }
 }
 
-function draw_pc(dt) {
+function draw_pc(dt, update) {
     var margin = {top: 90, right: 50, bottom: 10, left: 50},
     width = svg_position.row2.width1 - margin.left - margin.right,
     height = svg_position.row2.height - margin.top - margin.bottom;
-
-    d3.select('.parallelcoord')
-        .append('text')
-        .attr('class', 'quadHeader')
-        .text("Demographic Distribution")
-        .attr('transform','translate('+margin.left+', 30)')
 
     var dimensions = [
         {
@@ -496,14 +569,7 @@ function draw_pc(dt) {
 
     var line = d3.svg.line(),
         axis = d3.svg.axis().orient("left"),
-        background,
         foreground;
-
-    var svg = d3.select(".parallelcoord")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
-            .append("g")
-            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     var data = []
     for (var i = 0; i < dt['data_dict'].length; i++) {
@@ -518,24 +584,45 @@ function draw_pc(dt) {
             : data.map(function(d) { return d[dimension.name]; }).sort());
     });
 
-    // Add grey background lines for context.
-    background = svg.append("g")
-            .attr("class", "background")
-        .selectAll("path")
-            .data(data)
-        .enter().append("path")
-            .attr("d", path)
-            .attr("stroke", function(d,i){ return global_colors[d[6]];});
+    if (update==true) {
+        drawObj = d3.select('.parallelcoord').select('#firstG')
+        drawObj.selectAll('.foreground').remove()
+        update_parallel(drawObj, true)
+        return
+    }
 
-    // Add blue foreground lines for focus.
-    foreground = svg.append("g")
-            .attr("class", "foreground")
-        .selectAll("path")
-            .data(data)
-        .enter().append("path")
-            .attr("d", path)
-            .attr("stroke", function(d,i){ return global_colors[d.Income];});
+    function update_parallel(drawA, highlight) {
+        if (highlight) {
+        // Add blue foreground lines for focus.
+        foreground = drawA.append("g")
+                .attr("class", "foreground")
+            .selectAll("path")
+                .data(data)
+            .enter().append("path")
+                .attr("d", path)
+                .attr("stroke", "#7CC37C");
 
+        } else {
+        // Add blue foreground lines for focus.
+        foreground = drawA.append("g")
+                .attr("class", "foreground")
+            .selectAll("path")
+                .data(data)
+            .enter().append("path")
+                .attr("d", path)
+                .attr("stroke", function(d,i){ return global_colors[d.Income];});
+        }
+    }
+ 
+    var svg = d3.select(".parallelcoord")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr('id','firstG')
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    update_parallel(svg, false)
+    
     // Add a group element for each dimension.
     var g = svg.selectAll(".dimension")
                 .data(dimensions)
@@ -546,7 +633,6 @@ function draw_pc(dt) {
                     .origin(function(d) { return {x: x(d.name)}; })
                 .on("dragstart", function(d) {
                     dragging[d.name] = x(d.name);
-                    background.attr("visibility", "hidden");
                 })
                 .on("drag", function(d) {
                     dragging[d.name] = Math.min(width, Math.max(0, d3.event.x));
@@ -559,12 +645,6 @@ function draw_pc(dt) {
                     delete dragging[d.name];
                     transition(d3.select(this)).attr("transform", "translate(" + x(d.name) + ")");
                     transition(foreground).attr("d", path);
-                    background
-                        .attr("d", path)
-                        .transition()
-                            .delay(500)
-                            .duration(0)
-                            .attr("visibility", null);
                 })
             );
 
@@ -587,6 +667,12 @@ function draw_pc(dt) {
         .selectAll("rect")
             .attr("x", -8)
             .attr("width", 16);
+
+    d3.select('.parallelcoord')
+        .append('text')
+        .attr('class', 'quadHeader')
+        .text("Demographic Distribution")
+        .attr('transform','translate('+margin.left+', 30)')
 
     function position(d) {
         var v = dragging[d.name];

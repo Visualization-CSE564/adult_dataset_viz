@@ -16,11 +16,14 @@
     <center>
     <div class="header">
         <center>
-        <h1>ADULT DATASET</h1>
+        <h1>ADULT DATASET ANALYSIS</h1>
         </center>
     </div>
     <svg class="parallelcoord"></svg>
     <svg class="piechart"></svg>
+    <svg class="legends">
+        <!-- <text class="quadHeader" transform="translate(0,30)">Legends</text> -->
+    </svg>
     <svg class="horizontalbar"></svg>
     <svg class="stackedbar"></svg>
     <svg class="insights"></svg>
@@ -29,3 +32,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 </body>
 </html>
+<!-- 
+    d3.select('.stackedbar')
+        .append('text')
+        .attr('class', 'quadHeader')
+        .text("Demographic by Marital Status")
+        .attr('transform','translate('+margin.left+', 30)'); -->
