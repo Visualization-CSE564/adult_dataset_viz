@@ -49,20 +49,21 @@ function init() {
         // .style("left", svg_position.row3.width1 + svg_position.row3.width2);
 
     $.post("/pc", {}, draw_pc);
-    $.post("/getpca",{},draw_pca);
-    draw_non_standard('');
+    draw_all('');
 }
 
-function draw_non_standard(filter_string, income_filter) {
+function draw_all(filter_string, income_filter) {
     if (filter_string === '') {
         $.post("/piechart", {}, draw_piechart);
         $.post("/hori_bc", {}, draw_hori_bc);
+        $.post("/getpca",{},draw_pca);
         $.post("/barch", {}, draw_bc);
     } else {
         console.log({'list': filter_string, 'income_filter': income_filter})
         $.post("/piechart", {'list': filter_string, 'income_filter': income_filter}, draw_piechart);
         $.post("/hori_bc", {'list': filter_string, 'income_filter': income_filter}, draw_hori_bc);
         $.post("/barch", {'list': filter_string, 'income_filter': income_filter}, draw_bc);
+        $.post("/getpca", {'list': filter_string, 'income_filter': income_filter},draw_pca);
     }
 }
 
@@ -236,8 +237,8 @@ function draw_hori_bc(dt){
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    var svg2 = svg.append("g");
     var svg1 = svg.append("g");
+    var svg2 = svg.append("g");
 
     var data_hbc = dt['data_dict'];
     var l = data_hbc.length;
@@ -254,10 +255,15 @@ function draw_hori_bc(dt){
             .data(data_hbc)
             .enter().append("g")
             .attr("transform", function(d, i) { return "translate(" + (margin.left/2)+ ","+ (i * barwidth + margin.top/5) +")" ;})
+            .on("mouseover", horiBar1MouseOver)
+            .on("mouseout", horiBar1MouseOut)
+
     var bar2 = svg2.selectAll("g")
             .data(data_hbc)
             .enter().append("g")
             .attr("transform", function(d, i) { return "translate(" + (margin.left/2 + y(d[1])) + "," + (i * barwidth + margin.top/5) +")" ;})
+            .on("mouseover", horiBar2MouseOver)
+            .on("mouseout", horiBar2MouseOut)
     
     bar2.append("rect")
           .attr("height", barwidth-1)
@@ -268,16 +274,52 @@ function draw_hori_bc(dt){
           .attr("width", function(d){return (y(d[1]));})
           .attr("fill",global_colors['<=50K']);
 
-    bar1.append("text")
-          .attr("x", (barwidth) / 2)
-          .attr("transform", function(d,i){return "translate("+ (0) +","+(barwidth/2 + 3)+")" ;})
-          .attr("fill","#B63617")
-          .text(function(d) { return d[0];});
+    // bar1.append("text")
+    //     .text(function(d){return d[1]})
+
+    bar2.append("text")
+        .attr('id', function(d,i){ return 'hori_bc_bar_txt'+i})
+        .attr("x", (barwidth) / 2)
+        .attr("transform", function(d,i){return "translate("+ (-y(d[1])) +","+(barwidth/2 + 3)+")" ;})
+        .attr("fill","#B63617")
+        .text(function(d) { return d[0];});
 
     svg.append("g")
             .attr("class", "x axis")
             .attr("transform", "translate("+(margin.left/2)+"," + (margin.top/5)  + ")")
             .call(xAxis);
+
+    bar2.append("text")
+        .text(function(d){return d[0]+' (>50K): '+d[2]})
+        .attr('x', function(d){return 8-y(d[1])})
+        .attr('y', 12)
+        .style('opacity', 0)
+        .attr('id', function(d,i){return "hori_bc_bar2"+i})
+
+    bar1.append("text")
+        .text(function(d){return d[0]+' (<=50K): '+d[1]})
+        .attr('x', function(d){return 8})
+        .attr('y', 12)
+        .style('opacity', 0)
+        .attr('id', function(d,i){return "hori_bc_bar1"+i})
+
+    function horiBar1MouseOver(d, i) {
+        d3.select('#hori_bc_bar1'+i).style('opacity',1)
+        d3.select('.hori_bc_bar_txt'+i).style('opacity', 0)        
+    }
+
+    function horiBar1MouseOut(d, i) {
+        d3.select('#hori_bc_bar1'+i).style('opacity',0)
+        d3.select('.hori_bc_bar_txt'+i).style('opacity', 1)        
+    }
+    function horiBar2MouseOver(d, i) {
+        d3.select('#hori_bc_bar2'+i).style('opacity',1)
+        d3.select('.hori_bc_bar_txt'+i).style('opacity', 0)
+    }
+    function horiBar2MouseOut(d, i) {
+        d3.select('#hori_bc_bar2'+i).style('opacity',0)
+        d3.select('.hori_bc_bar_txt'+i).style('opacity', 1)
+    }
 }
 
 function draw_piechart(dt) {
@@ -401,10 +443,10 @@ function draw_piechart(dt) {
         console.log(components)
         if (components.length==2) {
             string = "(dataframe.race == '" + components[0] + "') & (dataframe.income == '" + components[1] + "')";
-            draw_non_standard(string, components[1]);  
+            draw_all(string, components[1]);  
         } else {
             string = "(dataframe.race == '" + components[0] + "')"
-            draw_non_standard(string, "None")
+            draw_all(string, "None")
         }
     }
 }
