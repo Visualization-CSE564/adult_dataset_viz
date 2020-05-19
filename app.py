@@ -22,8 +22,10 @@ def transform_data(df):
     ordinal_df = pd.DataFrame(StandardScaler().fit_transform(ordinal_df), columns = ordinal_df.columns)
     ss = StandardScaler()
     numerical_df = pd.DataFrame(ss.fit_transform(df[numerical]), columns = df[numerical].columns)  
-    final_df = pd.concat([numerical_df, categorical_df, ordinal_df], axis=1)    
-    return final_df
+    final_df = pd.concat([numerical_df, categorical_df, ordinal_df], axis=1)
+    pca = PCA(n_components = 2).fit_transform(final_df) 
+    pca_df = pd.DataFrame({'Component1': pca[:, 0], 'Component2': pca[:, 1]})
+    return pca_df
 
 @app.route("/", methods = ['POST', 'GET'])
 def index():
@@ -31,11 +33,19 @@ def index():
 
 @app.route("/getpca", methods = ['POST'])
 def get_pca_two_plot():
-    global pca_data
-    # i = request.form['list']
-    pca = PCA(n_components = 2).fit_transform(pca_data)
-    print(pca)
-    return {'data_dict': pca.tolist()}
+    global pca_data, dataframe
+    print(pca_data.columns)
+    if 'list' not in request.form:
+        pca_data2 = pca_data.drop(columns = ['idx'] , axis = 1)
+        return {'data_dict': pca_data.values.tolist()}
+    else:
+        s = request.form['list']
+        i = request.form['income_filter']
+        filter_df = dataframe.loc[eval(s)]
+        df_i = filter_df['idx']
+        pca_data2 = pca_data[pca_data['idx'].isin(df_i)]
+        pca_data2 = pca_data2.drop(columns = 'idx' , axis = 1)
+        return {'data_dict': pca_data2.values.tolist()}
 
 @app.route("/pc", methods = ['POST'])
 def data_load_pc():
