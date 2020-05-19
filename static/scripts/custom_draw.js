@@ -49,10 +49,92 @@ function init() {
         .style("left", svg_position.row3.width1 + svg_position.row3.width2);
 
     $.post("/pc", {}, draw_pc);
+    $.post("/getpca",{},draw_pca);
+    draw_non_standard();
+}
+
+function draw_non_standard() {
     $.post("/piechart", {}, draw_piechart);
     $.post("/hori_bc", {}, draw_hori_bc);
     $.post("/barch", {}, draw_bc);
 }
+
+
+function draw_pca(dt){
+    var margin = {top: 50, right: 25, bottom: 25, left: 25, text: 90},
+    width = svg_position.row3.width3 - margin.left - margin.right,
+    height = svg_position.row3.height - margin.top - margin.bottom;
+
+    var svg = d3.select(".insights")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom + margin.text)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    
+    var data = dt['data_dict'];
+    
+    var l = data.length;
+
+    var x = d3.scale.linear()
+        .domain([1.25 * d3.min(data, function(d){return d[0];}), 1.25 * d3.max(data, function(d){return d[0];})])
+        .range([0 , width - margin.right]);
+
+    var y = d3.scale.linear()
+        .domain([1.25 * d3.min(data, function(d){return d[1];}), 1.25 * d3.max(data, function(d){return d[1];})])
+        .range([0, height]);
+
+
+    var ydash = d3.scale.linear()
+        .domain([1.25 * d3.min(data, function(d){return d[1];}), 1.25 * d3.max(data, function(d){return d[1];})])           
+        .range([height, 0]);
+
+    var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("bottom");
+
+
+    var yAxis = d3.svg.axis()
+        .scale(ydash)
+        .orient("left");
+
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate("+(margin.left)+"," + (height + margin.top/5)  + ")")
+        .call(xAxis);
+    svg.append("g")
+        .attr("class", "y axis")
+        .attr("transform", "translate("+(margin.left)+"," + (margin.top/5)  + ")")
+        .call(yAxis);
+
+    svg.append("text")
+        .attr("class","axis")
+        .attr("transform", "translate("+(width/2 - margin.left)+"," + (height + margin.top)  + ")")
+        .text("Component 1");
+
+    svg.append("text")
+        .attr("class","axis")
+        .attr("transform", "rotate(-90) translate("+ (height/2 - 5*margin.top) +","+( margin.left/5 - 15 )+")" )
+        .text("Component 2")
+
+    xMap = function(d) { return x(d[0] );};
+    yMap = function(d) { return y(d[1]);}; 
+        // console.log(xMap,yMap);
+
+    var cir = svg.selectAll("circle")
+        .data(data)
+        .enter().append("circle")
+        .attr("stroke", "red")
+        .attr("stroke-width", "0")
+        .attr("fill", "red")
+        .attr("r", 1.5)
+        .attr("cx", (xMap))
+        .attr("cy", (yMap))
+        // .style("opacity","0")
+        // .transition().duration(1500)
+        // .style("opacity","1");
+
+}
+
 
 function draw_bc(dt){
     var margin = {top: 50, right: 25, bottom: 25, left: 25, text: 90},
@@ -193,7 +275,7 @@ function draw_piechart(dt) {
     d3.select('.piechart')
         .append('text')
         .attr('class', 'quadHeader')
-        .text("Sunburst")
+        .text("Demographic by Race")
         .attr('transform','translate('+margin.left+', 30)')
 
     var colorCode = {
@@ -237,7 +319,8 @@ function draw_piechart(dt) {
         .attr('d', path)
         .attr("fill", function(d, i) {return colorCode[d[0]]?colorCode[d[0]]:colorCode[d[0].substr(d[0].length-5).trim()];})
         .on("mouseover", pieMouseOver)
-        .on("mouseout", pieMouseOut);
+        .on("mouseout", pieMouseOut)
+        .on("click", pieMouseClick);
 
     var textPth = d3.svg.arc()({
         startAngle: 0,
@@ -296,6 +379,12 @@ function draw_piechart(dt) {
             .attr("fill", 'white');
         svg.selectAll('text').remove()
     }
+
+    function pieMouseClick(d, i) {
+        components = d[0].split(' ')
+        string = "(dataframe.race == '" + components[0] + "') & (dataframe.income == '" + components[1] + "')"
+        console.log(string)
+    }
 }
 
 function draw_pc(dt) {
@@ -306,7 +395,7 @@ function draw_pc(dt) {
     d3.select('.parallelcoord')
         .append('text')
         .attr('class', 'quadHeader')
-        .text("Parallel Coordinates")
+        .text("Demographic Distribution")
         .attr('transform','translate('+margin.left+', 30)')
 
     var dimensions = [
