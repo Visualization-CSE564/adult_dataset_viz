@@ -53,14 +53,14 @@ function init() {
     draw_non_standard('');
 }
 
-function draw_non_standard(filter_string) {
+function draw_non_standard(filter_string, income_filter) {
     if (filter_string === '') {
         $.post("/piechart", {}, draw_piechart);
         $.post("/hori_bc", {}, draw_hori_bc);
         $.post("/barch", {}, draw_bc);
     } else {
-        console.log({'list': filter_string})
-        $.post("/piechart", {'list': filter_string}, draw_piechart);
+        console.log({'list': filter_string, 'income_filter': income_filter})
+        $.post("/piechart", {'list': filter_string, 'income_filter': income_filter}, draw_piechart);
         // $.post("/hori_bc", {}, draw_hori_bc);
         // $.post("/barch", {}, draw_bc);
     }
@@ -68,9 +68,15 @@ function draw_non_standard(filter_string) {
 
 
 function draw_pca(dt){
-    var margin = {top: 50, right: 25, bottom: 25, left: 25, text: 90},
+    var margin = {top: 50, right: 25, bottom: 60, left: 25, text: 90},
     width = svg_position.row3.width3 - margin.left - margin.right,
     height = svg_position.row3.height - margin.top - margin.bottom;
+
+    d3.select('.insights')
+        .append('text')
+        .attr('class', 'quadHeader')
+        .text("PCA Plot")
+        .attr('transform','translate('+(margin.left * 2)+', 30)');
 
     var svg = d3.select(".insights")
         .attr("width", width + margin.left + margin.right)
@@ -389,8 +395,14 @@ function draw_piechart(dt) {
 
     function pieMouseClick(d, i) {
         components = d[0].split(' ');
-        string = "(dataframe.race == '" + components[0] + "') & (dataframe.income == '" + components[1] + "')";
-        draw_non_standard(string);
+        console.log(components)
+        if (components.length==2) {
+            string = "(dataframe.race == '" + components[0] + "') & (dataframe.income == '" + components[1] + "')";
+            draw_non_standard(string, components[1]);  
+        } else {
+            string = "(dataframe.race == '" + components[0] + "')"
+            draw_non_standard(string, "None")
+        }
     }
 }
 
