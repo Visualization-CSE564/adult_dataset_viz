@@ -32,6 +32,7 @@ def index():
 @app.route("/getpca", methods = ['POST'])
 def get_pca_two_plot():
     global pca_data
+    # i = request.form['list']
     pca = PCA(n_components = 2).fit_transform(pca_data)
     print(pca)
     return {'data_dict': pca.tolist()}
@@ -74,6 +75,7 @@ def pie_data():
             pivot_df.loc[pivot_df['>50K'].isnull() , '>50K'] = 0
             pivot_df.loc[pivot_df['<=50K'].isnull() , '<=50K'] = 0
         pivot_df.reset_index(inplace=True)
+        pivot_df = pivot_df[['race','<=50K','>50K']]
         return {"data_dict" : pivot_df.values.tolist()}
 
 
@@ -110,8 +112,7 @@ def horizontal_bar_data():
             pivot_df.loc[pivot_df['>50K'].isnull() , '>50K'] = 0
             pivot_df.loc[pivot_df['<=50K'].isnull() , '<=50K'] = 0
         pivot_df.reset_index(inplace=True)
-        return {"data_dict" : pivot_df.values.tolist()}
-        pivot_df.reset_index(inplace=True)
+        pivot_df = pivot_df[['occupation','<=50K','>50K']]
         s_df = pivot_df.values.tolist()
         s_df.sort(key = lambda x: -x[1] - x[2])
         return {"data_dict" : s_df}
@@ -131,7 +132,9 @@ def bar_data():
         return_val = pivot_df.values.tolist()
         return {"data_dict" : return_val}
     else:
-        filter_df = data_df[data_df['idx'].isin(request.form['list'])]
+        s = request.form['list'] 
+        i = request.form['income_filter']
+        filter_df = data_df.loc[eval(s)]
         new_filter_df = filter_df.groupby(by = ['marital_status','income'])
         new_filter_df = new_filter_df.count()
         new_filter_df.reset_index(inplace=True)
@@ -147,8 +150,7 @@ def bar_data():
             pivot_df.loc[pivot_df['>50K'].isnull() , '>50K'] = 0
             pivot_df.loc[pivot_df['<=50K'].isnull() , '<=50K'] = 0
         pivot_df.reset_index(inplace=True)
-        return {"data_dict" : pivot_df.values.tolist()}
-        pivot_df.reset_index(inplace=True)
+        pivot_df = pivot_df[['marital_status','<=50K','>50K']]
         return {"data_dict" : pivot_df.values.tolist()}
 
 def load_data():
