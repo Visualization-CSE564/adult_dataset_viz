@@ -8,7 +8,9 @@ body {
 }
 
 svg {
-    position: absolute;
+    position: relative;
+    margin:0px;
+    padding: 0px;
 }
 
 .background path {

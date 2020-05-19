@@ -15,38 +15,38 @@ function init() {
     d3.select(".header")
         .attr("width", svg_position.row1.width1)
         .attr("height", svg_position.row1.height)
-        .style("top", 0)
-        .style("left", 0);
+        // .style("top", 0)
+        // .style("left", 0);
 
     d3.select(".parallelcoord")
         .attr("width", svg_position.row2.width1)
         .attr("height", svg_position.row2.height)
-        .style("top", svg_position.row1.height)
-        .style("left", 0);
+        // .style("top", svg_position.row1.height)
+        // .style("left", 0);
 
     d3.select(".piechart")
         .attr("width", svg_position.row2.width2)
         .attr("height", svg_position.row2.height)
-        .style("top", svg_position.row1.height)
-        .style("left", svg_position.row2.width1);
+        // .style("top", svg_position.row1.height)
+        // .style("left", svg_position.row2.width1);
 
     d3.select(".horizontalbar")
         .attr("width", svg_position.row3.width1)
         .attr("height", svg_position.row3.height)
-        .style("top", svg_position.row1.height + svg_position.row2.height)
-        .style("left", 0);
+        // .style("top", svg_position.row1.height + svg_position.row2.height)
+        // .style("left", 0);
 
     d3.select(".stackedbar")
         .attr("width", svg_position.row3.width2)
         .attr("height", svg_position.row3.height)
-        .style("top", svg_position.row1.height + svg_position.row2.height)
-        .style("left", svg_position.row3.width1);
+        // .style("top", svg_position.row1.height + svg_position.row2.height)
+        // .style("left", svg_position.row3.width1);
 
     d3.select(".insights")
         .attr("width", svg_position.row3.width3)
         .attr("height", svg_position.row3.height)
-        .style("top", svg_position.row1.height + svg_position.row2.height)
-        .style("left", svg_position.row3.width1 + svg_position.row3.width2);
+        // .style("top", svg_position.row1.height + svg_position.row2.height)
+        // .style("left", svg_position.row3.width1 + svg_position.row3.width2);
 
     $.post("/pc", {}, draw_pc);
     $.post("/getpca",{},draw_pca);
@@ -61,8 +61,8 @@ function draw_non_standard(filter_string, income_filter) {
     } else {
         console.log({'list': filter_string, 'income_filter': income_filter})
         $.post("/piechart", {'list': filter_string, 'income_filter': income_filter}, draw_piechart);
-        // $.post("/hori_bc", {}, draw_hori_bc);
-        // $.post("/barch", {}, draw_bc);
+        $.post("/hori_bc", {'list': filter_string, 'income_filter': income_filter}, draw_hori_bc);
+        $.post("/barch", {'list': filter_string, 'income_filter': income_filter}, draw_bc);
     }
 }
 
@@ -89,16 +89,16 @@ function draw_pca(dt){
     var l = data.length;
 
     var x = d3.scale.linear()
-        .domain([1.25 * d3.min(data, function(d){return d[0];}), 1.25 * d3.max(data, function(d){return d[0];})])
-        .range([0 , width - margin.right]);
+        .domain([d3.min(data, function(d){return d[0];}), d3.max(data, function(d){return d[0];})])
+        .range([0 , width]);
 
     var y = d3.scale.linear()
-        .domain([1.25 * d3.min(data, function(d){return d[1];}), 1.25 * d3.max(data, function(d){return d[1];})])
+        .domain([d3.min(data, function(d){return d[1];}), d3.max(data, function(d){return d[1];})])
         .range([0, height]);
 
 
     var ydash = d3.scale.linear()
-        .domain([1.25 * d3.min(data, function(d){return d[1];}), 1.25 * d3.max(data, function(d){return d[1];})])           
+        .domain([d3.min(data, function(d){return d[1];}), d3.max(data, function(d){return d[1];})])           
         .range([height, 0]);
 
     var xAxis = d3.svg.axis()
@@ -122,14 +122,14 @@ function draw_pca(dt){
     svg.append("text")
         .attr("class","axis")
         .attr("transform", "translate("+(width/2 - margin.left)+"," + (height + margin.top)  + ")")
-        .text("Component 1");
+        .text("Principal Component 1");
 
     svg.append("text")
         .attr("class","axis")
-        .attr("transform", "rotate(-90) translate("+ (height/2 - 5*margin.top) +","+( margin.left/5 - 15 )+")" )
-        .text("Component 2")
+        .attr("transform", "rotate(-90) translate("+ (height/2 - 5*margin.top) +","+( margin.left/5 - 5 )+")" )
+        .text("Principal Component 2")
 
-    xMap = function(d) { return x(d[0] );};
+    xMap = function(d) { return x(d[0]) + margin.left;};
     yMap = function(d) { return y(d[1]);}; 
         // console.log(xMap,yMap);
 
@@ -150,6 +150,7 @@ function draw_pca(dt){
 
 
 function draw_bc(dt){
+    d3.select('.stackedbar').html('');
     var margin = {top: 50, right: 25, bottom: 25, left: 25, text: 90},
     width = svg_position.row3.width2 - margin.left - margin.right,
     height = svg_position.row3.height - margin.top - margin.bottom - margin.text;
@@ -218,7 +219,7 @@ function draw_bc(dt){
 }
 
 function draw_hori_bc(dt){
-
+    d3.select('.horizontalbar').html('');
     var margin = {top: 50, right: 25, bottom: 25, left: 25},
     width = svg_position.row3.width1 - margin.left - margin.right,
     height = svg_position.row3.height - margin.top - margin.bottom;
@@ -280,6 +281,8 @@ function draw_hori_bc(dt){
 }
 
 function draw_piechart(dt) {
+    d3.select('.piechart').html('');
+
     var margin = {top: 70, right: 50, bottom: 30, left: 50},
     width = svg_position.row2.width2 - margin.left - margin.right,
     height = svg_position.row2.height - margin.top - margin.bottom;
