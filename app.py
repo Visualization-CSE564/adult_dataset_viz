@@ -59,15 +59,19 @@ def pie_data():
         s = request.form['list'] 
         i = request.form['income_filter']
         filter_df = data_df.loc[eval(s)]
-        print(filter_df)
-        # filter_df = data_df[data_df['idx'].isin(request.form['list'])]
         new_filter_df = filter_df.groupby(by = ['race','income'])
         new_filter_df = new_filter_df.count()
         new_filter_df.reset_index(inplace=True)
         pivot_df = new_filter_df.pivot(index= 'race', columns = 'income' , values = 'idx')
-        if (i == '>50K' or i == 'None'):
+        z_list = [0] * (pivot_df.shape[0])
+        if (i == '>50K'):
             pivot_df.loc[pivot_df['>50K'].isnull() , '>50K'] = 0
-        if (i == '<=50K' or i == 'None'):
+            pivot_df['<=50K'] = z_list
+        elif (i == '<=50K'):
+            pivot_df.loc[pivot_df['<=50K'].isnull() , '<=50K'] = 0
+            pivot_df['>50K'] = z_list
+        else: 
+            pivot_df.loc[pivot_df['>50K'].isnull() , '>50K'] = 0
             pivot_df.loc[pivot_df['<=50K'].isnull() , '<=50K'] = 0
         pivot_df.reset_index(inplace=True)
         return {"data_dict" : pivot_df.values.tolist()}
@@ -88,13 +92,25 @@ def horizontal_bar_data():
         s_df.sort(key = lambda x: -x[1] - x[2])
         return {"data_dict" : s_df}
     else:
-        filter_df = data_df[data_df['idx'].isin(request.form['list'])]
+        s = request.form['list'] 
+        i = request.form['income_filter']
+        filter_df = data_df.loc[eval(s)]
         new_filter_df = filter_df.groupby(by = ['occupation','income'])
         new_filter_df = new_filter_df.count()
         new_filter_df.reset_index(inplace=True)
         pivot_df = new_filter_df.pivot(index= 'occupation', columns = 'income' , values = 'idx')
-        pivot_df.loc[pivot_df['>50K'].isnull() , '>50K'] = 0
-        pivot_df.loc[pivot_df['<=50K'].isnull() , '<=50K'] = 0
+        z_list = [0] * (pivot_df.shape[0])
+        if (i == '>50K'):
+            pivot_df.loc[pivot_df['>50K'].isnull() , '>50K'] = 0
+            pivot_df['<=50K'] = z_list
+        elif (i == '<=50K'):
+            pivot_df.loc[pivot_df['<=50K'].isnull() , '<=50K'] = 0
+            pivot_df['>50K'] = z_list
+        else: 
+            pivot_df.loc[pivot_df['>50K'].isnull() , '>50K'] = 0
+            pivot_df.loc[pivot_df['<=50K'].isnull() , '<=50K'] = 0
+        pivot_df.reset_index(inplace=True)
+        return {"data_dict" : pivot_df.values.tolist()}
         pivot_df.reset_index(inplace=True)
         s_df = pivot_df.values.tolist()
         s_df.sort(key = lambda x: -x[1] - x[2])
@@ -120,7 +136,18 @@ def bar_data():
         new_filter_df = new_filter_df.count()
         new_filter_df.reset_index(inplace=True)
         pivot_df = new_filter_df.pivot(index= 'marital_status', columns = 'income' , values = 'idx')
-        pivot_df.loc[pivot_df['>50K'].isnull() , '>50K'] = 0
+        z_list = [0] * (pivot_df.shape[0])
+        if (i == '>50K'):
+            pivot_df.loc[pivot_df['>50K'].isnull() , '>50K'] = 0
+            pivot_df['<=50K'] = z_list
+        elif (i == '<=50K'):
+            pivot_df.loc[pivot_df['<=50K'].isnull() , '<=50K'] = 0
+            pivot_df['>50K'] = z_list
+        else: 
+            pivot_df.loc[pivot_df['>50K'].isnull() , '>50K'] = 0
+            pivot_df.loc[pivot_df['<=50K'].isnull() , '<=50K'] = 0
+        pivot_df.reset_index(inplace=True)
+        return {"data_dict" : pivot_df.values.tolist()}
         pivot_df.reset_index(inplace=True)
         return {"data_dict" : pivot_df.values.tolist()}
 
