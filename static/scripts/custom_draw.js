@@ -1,6 +1,6 @@
 var svg_position = {
     row1: {height: 120, width1: 1200},
-    row2: {height: 400, width1: 750, width2: 300, width3: 150},
+    row2: {height: 400, width1: 700, width2: 350, width3: 150},
     row3: {height: 300, width1: 450, width2: 300, width3: 450}
 }
 
@@ -60,12 +60,64 @@ function init() {
 }
 
 function draw_legends() {
-    margin = {left:25}
-    d3.select('.legends')
-        .append('text')
-        .attr('transform', 'translate('+margin.left+', 30)')
+    margin = {left:25, legendTop: 35}
+    legend = d3.select('.legends')
+
+    legend.append('rect')
+        .attr('fill', '#979797')
+        .attr('height', 120)
+        .attr('width', svg_position.row2.width3)
+
+    legend.append('text')
+        .attr('transform', 'translate('+margin.left+', '+margin.legendTop+')')
         .attr('class', 'quadHeader')
         .text('Legends')
+        .attr('fill', 'white')
+
+    legend.append('rect')
+        .attr('transform', 'translate('+(margin.left*1.4)+','+(margin.legendTop+15)+')')
+        .attr('width', 20)
+        .attr('height', 20)
+        .attr('fill', global_colors['<=50K'])
+        .style('stroke-width',1)
+        .style('stroke','white')
+
+    legend.append('text')
+        .attr('transform', 'translate('+(margin.left*1.4 + 30)+','+(margin.legendTop+30)+')')
+        .text("<=50K income")
+        .attr('fill', 'white')
+
+    legend.append('rect')
+        .attr('transform', 'translate('+(margin.left*1.4)+','+(margin.legendTop+45)+')')
+        .attr('width', 20)
+        .attr('height', 20)
+        .attr('fill', global_colors['>50K'])
+        .style('stroke-width',1)
+        .style('stroke','white')
+
+    legend.append('text')
+        .attr('transform', 'translate('+(margin.left*1.4 + 30)+','+(margin.legendTop+60)+')')
+        .text(">50K income")
+        .attr('fill', 'white')
+
+    legend.append('rect')
+        .attr('transform', 'translate(0, 150)')
+        .attr('width',svg_position.row2.width3 )
+        .attr('height', 50)
+        .attr('fill', '#DE5B7B')
+        .on('click',resetButton)
+
+    legend.append('text')
+        .attr('transform', 'translate('+(svg_position.row2.width3/2)+', 182)')
+        .text("RESET")
+        .attr('text-anchor', 'middle')
+        .attr('fill','white')
+        .style('font-size',20)
+        .on('click',resetButton)
+
+    function resetButton() {
+        draw_all('')
+    }
 }
 
 function draw_all(filter_string, income_filter) {
@@ -428,7 +480,7 @@ function draw_piechart(dt) {
 
     var data = []
     var max_val = 0
-    var margin_add = 0.5
+    var margin_add = 0
     for (var i = 0; i < dt.data_dict.length; i++) {
         if (i==0) {
             data.push([dt.data_dict[i][0], margin_add, dt.data_dict[i][1] + dt.data_dict[i][2], 'inner', dt.data_dict[i][1] + dt.data_dict[i][2]]);
@@ -456,6 +508,8 @@ function draw_piechart(dt) {
         .append('path')
         .attr('d', path)
         .attr("fill", function(d, i) {return colorCode[d[0]]?colorCode[d[0]]:colorCode[d[0].substr(d[0].length-5).trim()];})
+        .style('stroke','white')
+        .style('stroke-width', 1)
         .on("mouseover", pieMouseOver)
         .on("mouseout", pieMouseOut)
         .on("click", pieMouseClick);
