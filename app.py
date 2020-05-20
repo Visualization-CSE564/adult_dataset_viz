@@ -36,12 +36,14 @@ def get_pca_two_plot():
     global pca_data, dataframe, rs
     if 'list' not in request.form:
         pca_data2 = pca_data.drop(columns = ['idx'] , axis = 1)
+        pca_data2['indicator'] = [True] * pca_data2.shape[0]
         return {'data_dict': pca_data2.values.tolist()}
     else:
         s = request.form['list']
         filter_df = rs.loc[eval(s)]
         rs_i = filter_df['idx'].tolist()
-        pca_data2 = pca_data[pca_data['idx'].isin(rs_i)]
+        pca_data2 = pca_data.copy()
+        pca_data2['indicator'] = pca_data2['idx'].isin(rs_i)
         pca_data2 = pca_data2.drop(columns = 'idx' , axis = 1)
         return {'data_dict': pca_data2.values.tolist()}
 

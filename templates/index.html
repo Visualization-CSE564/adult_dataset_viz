@@ -14,25 +14,27 @@
 </head>
 <body onload="init()">
     <center>
-        <div class="header">
+        <div class="header" style="margin-bottom: 10px">
             <center>
-            <h1>ADULT DATASET ANALYSIS</h1>
+            <h1 style="margin: 0">ADULT DATASET ANALYSIS</h1>
+            <h6 style="margin: 0; color:red;">Dua, D. and Graff, C. (2019). UCI Machine Learning Repository [http://archive.ics.uci.edu/ml]</h6>
             </center>
         </div>
-        <svg class="parallelcoord"></svg>
-        <svg class="piechart"></svg>
-        <svg class="legends"></svg>
-        <svg class="horizontalbar"></svg>
-        <svg class="stackedbar"></svg>
-        <svg class="insights"></svg>
+        <div class="progress-div" style="height:300px; width:80%; display: block; margin-top: 300px;">
+            <div class="progress" style="margin-top: 250px;">
+                  <div class="indeterminate"></div>
+            </div>
+        </div>
+        <div class="allSvg" style="display: none">
+            <svg class="parallelcoord"></svg>
+            <svg class="piechart"></svg>
+            <svg class="legends"></svg>
+            <svg class="horizontalbar"></svg>
+            <svg class="stackedbar"></svg>
+            <svg class="insights"></svg>
+        </div>
     </center>
     <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 </body>
 </html>
-<!-- 
-    d3.select('.stackedbar')
-        .append('text')
-        .attr('class', 'quadHeader')
-        .text("Demographic by Marital Status")
-        .attr('transform','translate('+margin.left+', 30)'); -->

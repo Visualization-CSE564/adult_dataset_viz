@@ -1,5 +1,5 @@
 var svg_position = {
-    row1: {height: 120, width1: 1200},
+    row1: {height: 80, width1: 1200},
     row2: {height: 400, width1: 700, width2: 350, width3: 150},
     row3: {height: 300, width1: 450, width2: 300, width3: 450}
 }
@@ -13,12 +13,11 @@ var global_colors = {
 var transition_duration = 200;
 
 function init() {
-    d3.select(".header")
-        .attr("width", svg_position.row1.width1)
-        .attr("height", svg_position.row1.height)
+    // d3.select(".header")
+    //     .attr("width", svg_position.row1.width1)
+    //     .attr("height", svg_position.row1.height)
         // .style("top", 0)
         // .style("left", 0);
-
     d3.select(".parallelcoord")
         .attr("width", svg_position.row2.width1)
         .attr("height", svg_position.row2.height)
@@ -40,12 +39,14 @@ function init() {
     d3.select(".horizontalbar")
         .attr("width", svg_position.row3.width1)
         .attr("height", svg_position.row3.height)
+        .style("top", -90)
         // .style("top", svg_position.row1.height + svg_position.row2.height)
         // .style("left", 0);
 
     d3.select(".stackedbar")
         .attr("width", svg_position.row3.width2)
         .attr("height", svg_position.row3.height)
+        .style("top", -90)
         // .style("top", svg_position.row1.height + svg_position.row2.height)
         // .style("left", svg_position.row3.width1);
 
@@ -121,6 +122,8 @@ function draw_legends() {
 }
 
 function draw_all(filter_string, income_filter) {
+    // d3.select('.progress-div').style('display', 'block');
+    // d3.select('.allSvg').style('display', 'none');
     if (filter_string === '') {
         $.post("/piechart", {}, draw_piechart);
         $.post("/hori_bc", {}, draw_hori_bc);
@@ -170,7 +173,6 @@ function draw_pca(dt, update){
         .orient("left");
 
     if (update) {
-        console.log(data)
         d3.select('.insights').selectAll('circle').remove();
         draw_pca_cirles(d3.select('.insights').select('#drawArea'));
         return;
@@ -181,6 +183,14 @@ function draw_pca(dt, update){
         .attr('class', 'quadHeader')
         .text("PCA Plot")
         .attr('transform','translate('+(margin.left * 2)+', 30)');
+
+    d3.select('.insights')
+        .append('text')
+        .attr('class', 'quadHeader')
+        .text("Random Sampled")
+        .attr('transform','translate('+(margin.left * 2 + 80)+', 30)')
+        .style('fill','red')
+        .style('font-size',20);
 
     var svg = d3.select(".insights")
         .attr("width", width + margin.left + margin.right)
@@ -214,12 +224,20 @@ function draw_pca(dt, update){
     draw_pca_cirles(svg);
 
     function draw_pca_cirles(drawA) {
+        d3.select('.allSvg')
+            .select('.insights')
+            .append('rect')
+            .attr('fill','none')
+            .attr('stroke', "#979797")
+            .attr('height',svg_position.row3.height)
+            .attr('width', svg_position.row3.width3)
+
         var cir = drawA.selectAll("circle")
             .data(data)
             .enter().append("circle")
             .attr("stroke", "red")
             .attr("stroke-width", "0")
-            .attr("fill", function(d){ return global_colors[d[2]]})
+            .attr("fill", function(d){ return d[3]?global_colors[d[2]]:"#e1e1e1"})
             .attr("r", 1.5)
             .attr("cx", (xMap))
             .attr("cy", (yMap))
@@ -321,6 +339,14 @@ function draw_bc(dt){
             .attr("class", "y axis")
             .attr("transform", "translate("+(margin.left)+"," + (margin.top/5)  + ")")
             .call(yAxis);
+
+    d3.select('.allSvg')
+        .select('.stackedbar')
+        .append('rect')
+        .attr('fill','none')
+        .attr('stroke', "#979797")
+        .attr('height',svg_position.row3.height)
+        .attr('width', svg_position.row3.width2)
 
     function stackedBar1MouseOver(d, i) {
         d3.select('#stackedBar1_'+i).transition().duration(transition_duration).style('opacity',1)
@@ -429,6 +455,14 @@ function draw_hori_bc(dt){
         .style('opacity', 0)
         .attr('id', function(d,i){return "hori_bc_bar1"+i})
 
+    d3.select('.allSvg')
+        .select('.horizontalbar')
+        .append('rect')
+        .attr('fill','none')
+        .attr('stroke', "#979797")
+        .attr('height',svg_position.row3.height)
+        .attr('width', svg_position.row3.width1)
+
     function horiBar1MouseOver(d, i) {
         d3.select('#hori_bc_bar1'+i).style('opacity',1)
         d3.select('#hori_bc_bar_txt'+i).style('opacity', 0)        
@@ -526,6 +560,14 @@ function draw_piechart(dt) {
         .attr('d', textPth)
         .attr('fill', 'white');
 
+    d3.select('.allSvg')
+        .select('.piechart')
+        .append('rect')
+        .attr('fill','none')
+        .attr('stroke', "#979797")
+        .attr('height',svg_position.row2.height)
+        .attr('width', svg_position.row2.width2)
+
     function path(d) {
         var arcGenerator = d3.svg.arc();
         var ir = radius.r1;
@@ -586,6 +628,8 @@ function draw_piechart(dt) {
 }
 
 function draw_pc(dt, update) {
+    d3.select('.parallelcoord').html('');
+
     var margin = {top: 90, right: 50, bottom: 10, left: 50},
     width = svg_position.row2.width1 - margin.left - margin.right,
     height = svg_position.row2.height - margin.top - margin.bottom;
@@ -639,13 +683,6 @@ function draw_pc(dt, update) {
             : data.map(function(d) { return d[dimension.name]; }).sort());
     });
 
-    if (update==true) {
-        drawObj = d3.select('.parallelcoord').select('#firstG')
-        drawObj.selectAll('.foreground').remove()
-        update_parallel(drawObj, true)
-        return
-    }
-
     function update_parallel(drawA, highlight) {
         if (highlight) {
         // Add blue foreground lines for focus.
@@ -655,7 +692,7 @@ function draw_pc(dt, update) {
                 .data(data)
             .enter().append("path")
                 .attr("d", path)
-                .attr("stroke", "#7CC37C");
+                .attr("stroke", function(d,i){ return global_colors[d.Income];});
 
         } else {
         // Add blue foreground lines for focus.
@@ -667,6 +704,14 @@ function draw_pc(dt, update) {
                 .attr("d", path)
                 .attr("stroke", function(d,i){ return global_colors[d.Income];});
         }
+
+        d3.select('.allSvg')
+            .select('.parallelcoord')
+            .append('rect')
+            .attr('fill','none')
+            .attr('stroke', "#979797")
+            .attr('height',svg_position.row2.height)
+            .attr('width', svg_position.row2.width1)
     }
  
     var svg = d3.select(".parallelcoord")
@@ -675,8 +720,12 @@ function draw_pc(dt, update) {
             .append("g")
             .attr('id','firstG')
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-    update_parallel(svg, false)
+    
+    if (update==true) {
+        update_parallel(svg, true)
+    } else {
+        update_parallel(svg, false)
+    }
     
     // Add a group element for each dimension.
     var g = svg.selectAll(".dimension")
@@ -726,8 +775,15 @@ function draw_pc(dt, update) {
     d3.select('.parallelcoord')
         .append('text')
         .attr('class', 'quadHeader')
+        .text("Sampled")
+        .attr('transform','translate('+(margin.left)+', 30)')
+        .style('fill', 'red')
+
+    d3.select('.parallelcoord')
+        .append('text')
+        .attr('class', 'quadHeader')
         .text("Demographic Distribution")
-        .attr('transform','translate('+margin.left+', 30)')
+        .attr('transform','translate('+(margin.left + 80)+', 30)')
 
     function position(d) {
         var v = dragging[d.name];
@@ -767,4 +823,7 @@ function draw_pc(dt, update) {
             }) ? null : "none";
         });
     }
+
+    d3.select('.progress-div').style('display', 'none');
+    d3.select('.allSvg').style('display', 'block');
 }
